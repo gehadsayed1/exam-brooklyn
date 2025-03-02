@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.9",
+    "axios": "^1.8.1",
     "lucide-vue-next": "^0.477.0",
     "tailwindcss": "^4.0.9",
+    "toastify-js": "^1.12.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
     "@types/node": "^22.13.8",
+    "@types/toastify-js": "^1.12.3",
     "@vitejs/plugin-vue": "^5.2.1",
     "vite": "^6.2.0"
   }
