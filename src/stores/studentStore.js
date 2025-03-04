@@ -38,7 +38,7 @@ export const useStudentStore = defineStore("studentStore", () => {
       const response = await apiClient.get(`${STUDENT_ID}/${studentId.value}`);
       courses.value = response.data; 
     } catch (err) {
-      error.value = "failed to fetch courses";
+      // error.value = "failed to fetch courses";
     } finally {
       loading.value = false;
     }
