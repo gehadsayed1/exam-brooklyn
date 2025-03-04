@@ -27,18 +27,18 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { Notyf } from 'notyf';
-import 'notyf/notyf.min.css';
+// import { Notyf } from 'notyf';
+// import 'notyf/notyf.min.css';
 
-const notyf = new Notyf({
-  duration: 5000,
-  dismissible: true,
-  ripple: true,
-  position: {
-    x: 'center',
-    y: 'top',
-  },
-});
+// const notyf = new Notyf({
+//   duration: 5000,
+//   dismissible: true,
+//   ripple: true,
+//   position: {
+//     x: 'center',
+//     y: 'top',
+//   },
+// });
 
 const questions = ref([
   { text: "What is 2 + 2?", options: [ { id: 1, text: "3" }, { id: 2, text: "4" }, { id: 3, text: "5" }, { id: 4, text: "6" } ] },

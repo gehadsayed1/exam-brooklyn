@@ -59,7 +59,7 @@ const SelectedComponent = computed(() => {
             Sign In
           </h2>
         </div>
-        <div class="@container mr-10">
+        <div class="@container sm:mr-10 mr-0">
           <p class="text-gray-500 dark:text-gray-400 mt-2 text-lg font-medium">
             Please Select Your Role
           </p>
