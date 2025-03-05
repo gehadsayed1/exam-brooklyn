@@ -1,58 +1,68 @@
-<template>
-  <div class="@container">
-    <div class="text-center">
-      <h2 class="text-3xl font-bold mb-4 mt-5">Welcome to the Quiz!</h2>
-    </div>
-    <div class="text-center">
-      <p class="text-xl font-semibold">Time Left: <span class="font-bold text-2xl text-primary border px-2 rounded-xl">{{ timeLeft }}</span> Seconds</p>
-    </div>
-    <div class="quiz-container">
-      <div class="question-container" v-if="currentQuestion">
-        <h3 class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200">
-          {{ currentQuestion.text }}
-        </h3>
-        <div v-for="option in currentQuestion.options" :key="option.id" class="option flex items-center gap-3 mt-2 border border-primary p-2 rounded-2xl cursor-pointer transition-all"
-          :class="{ 'selected-option': selectedOption === option.id }" @click="selectedOption = option.id">
-          <input type="radio" :id="'option-' + option.id" v-model="selectedOption" :value="option.id" class="radio-btn" />
-          <label :for="'option-' + option.id" class="w-full cursor-pointer">{{ option.text }}</label>
-        </div>
-      </div>
-      <button @click="nextQuestion" :disabled="!selectedOption">Next Question</button>
-      <div v-if="quizCompleted">
-        <p class="result-message">Congratulations, you've finished the quiz!</p>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-// import { Notyf } from 'notyf';
-// import 'notyf/notyf.min.css';
+import { Notyf } from 'notyf';
+import 'notyf/notyf.min.css';
+import { useStudentStore } from '../stores/studentStore';
 
-// const notyf = new Notyf({
-//   duration: 5000,
-//   dismissible: true,
-//   ripple: true,
-//   position: {
-//     x: 'center',
-//     y: 'top',
-//   },
-// });
+const studentStore = useStudentStore();
 
-const questions = ref([
-  { text: "What is 2 + 2?", options: [ { id: 1, text: "3" }, { id: 2, text: "4" }, { id: 3, text: "5" }, { id: 4, text: "6" } ] },
-  { text: "What is 5 + 3?", options: [ { id: 1, text: "7" }, { id: 2, text: "8" }, { id: 3, text: "9" }, { id: 4, text: "6" } ] },
-  { text: "What is 10 + 15?", options: [ { id: 1, text: "25" }, { id: 2, text: "20" }, { id: 3, text: "30" }, { id: 4, text: "35" } ] }
-]);
 
+const duration = ref(studentStore.startExam.duration);
+const questions = ref(studentStore.startExam.questions);
+const submitAnswers = studentStore.submitExamAnswers; 
+const examAnswers = studentStore.examAnswers; 
+
+const timeLeft = ref(duration.value);
 const currentQuestionIndex = ref(0);
 const selectedOption = ref(null);
-const timeLeft = ref(60);
 const quizCompleted = ref(false);
 let interval;
 
+
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
+
+
+const startTimer = () => {
+  interval = setInterval(() => {
+    if (timeLeft.value > 0) {
+      timeLeft.value--;
+    } else {
+      clearInterval(interval);
+      notyf.error('Time is up! The quiz has ended.');
+      submitAnswers(); 
+    }
+  }, 1000);
+};
+
+
+const nextQuestion = () => {
+  console.log('Before Next Question:', examAnswers.value); 
+  if (currentQuestionIndex.value < questions.value.length - 1) {
+   
+    if (Array.isArray(examAnswers.value)) {
+    
+      if (selectedOption.value !== null) {
+        examAnswers.value.push({
+          q_id: currentQuestion.value.id,
+          selected_option: selectedOption.value,
+        });
+        console.log('Selected Answer:', selectedOption.value); 
+        console.log('Answered Questions:', examAnswers.value); 
+      }
+    } else {
+      console.error('examAnswers is not an array');
+    }
+
+    currentQuestionIndex.value++;
+    selectedOption.value = null;
+  } else {
+    quizCompleted.value = true;
+    notyf.success('Congratulations! You have completed the quiz.');
+    submitAnswers();
+  }
+};
+
+
 
 const saveState = () => {
   const examState = {
@@ -63,6 +73,7 @@ const saveState = () => {
   localStorage.setItem("examState", JSON.stringify(examState));
 };
 
+
 const loadState = () => {
   const savedData = JSON.parse(localStorage.getItem("examState"));
   if (savedData) {
@@ -72,39 +83,59 @@ const loadState = () => {
   }
 };
 
-const startTimer = () => {
-  interval = setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--;
-      saveState();
-    } else {
-      clearInterval(interval);
-      notyf.error('Time is up! The quiz has ended.');
-    }
-  }, 1000);
-};
 
-const nextQuestion = () => {
-  if (currentQuestionIndex.value < questions.value.length - 1) {
-    currentQuestionIndex.value++;
-    selectedOption.value = null;
-    saveState();
-  } else {
-    quizCompleted.value = true;
-    notyf.success('Congratulations! You have completed the quiz.');
-    localStorage.removeItem("examState");
-  }
-};
+const notyf = new Notyf({
+  duration: 5000,
+  dismissible: true,
+  ripple: true,
+  position: {
+    x: 'center',
+    y: 'top',
+  },
+});
 
 onMounted(() => {
   loadState();
   startTimer();
 });
 
+
 watch(timeLeft, () => {
   saveState();
 });
 </script>
+
+<template>
+  <div class="@container">
+    <div class="text-center">
+      <h2 class="text-3xl font-bold mb-4 mt-5">Welcome to the Quiz!</h2>
+    </div>
+    <div class="text-center">
+      <p class="text-xl font-semibold">Time Left: <span
+          class="font-bold text-2xl text-primary border px-2 rounded-xl">{{ timeLeft }}</span> Seconds</p>
+    </div>
+    <div class="quiz-container">
+      <div class="question-container" v-if="currentQuestion">
+        <h3
+          class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200">
+          {{ currentQuestion.question_text }}
+        </h3>
+        <div v-for="(option, index) in currentQuestion.options" :key="index"
+          class="option flex items-center gap-3 mt-2 border border-primary p-2 rounded-2xl cursor-pointer transition-all"
+          :class="{ 'selected-option': selectedOption === option }" @click="selectedOption = option">
+          <input type="radio" :id="'option-' + index" v-model="selectedOption" :value="option"
+            class="radio-btn" />
+          <label :for="'option-' + index" class="w-full cursor-pointer">{{ option }}</label>
+        </div>
+      </div>
+      <button @click="nextQuestion" :disabled="!selectedOption">Next Question</button>
+      
+      <div v-if="quizCompleted">
+        <p class="result-message">Congratulations, you've finished the quiz!</p>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .quiz-container {

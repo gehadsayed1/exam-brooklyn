@@ -24,7 +24,7 @@ const withGraduationCap = (IconComponent) => {
 const ExistingStudentIcon = withGraduationCap(UserCheck);
 const NewStudentIcon = withGraduationCap(UserPlus);
 
-const selectedRole = ref("new");
+const selectedRole = ref("existing");
 
 const selectRole = (role) => {
   selectedRole.value = role;
@@ -40,7 +40,7 @@ const SelectedComponent = computed(() => {
 <template>
   <div class="login dark:bg-gray-700">
     <div class="grid sm:grid-cols-2 grid-cols-1 p-5 sm:p-0 relative">
-      <div class="relative w-[90%] hidden sm:block">
+      <div class="relative w-[90%] h-[110vh] hidden sm:block">
         <img :src="hero" alt="hero img" class="h-full w-full object-cover" />
         <div class="absolute inset-0 bg-black/50"></div>
         <div class="absolute inset-0 flex items-center justify-center">
@@ -54,8 +54,7 @@ const SelectedComponent = computed(() => {
       <div>
         <div class="flex justify-start items-center pt-5">
           <h2
-            class="text-primary dark:text-white relative text-4xl font-bold after:content-[''] after:block after:bg-primary after:w-[100px] after:h-[4px] after:rounded-2xl after:mt-2"
-          >
+            class="text-primary dark:text-white relative text-4xl font-bold after:content-[''] after:block after:bg-primary after:w-[100px] after:h-[4px] after:rounded-2xl after:mt-2">
             Sign In
           </h2>
         </div>
@@ -64,52 +63,29 @@ const SelectedComponent = computed(() => {
             Please Select Your Role
           </p>
           <div class="flex gap-10 p-4 mt-2 justify-center">
-            <div
-              class="flex flex-col items-center p-4 rounded gap-5 border w-[130px] relative cursor-pointer"
-              :class="{
-                'border-3 border-blue-600': selectedRole === 'existing',
-                'border-gray-400': selectedRole !== 'existing',
-              }"
-              @click="selectRole('existing')"
-            >
+            <div class="flex flex-col items-center p-4 rounded gap-5 border w-[130px] relative cursor-pointer" :class="{
+              'border-3 border-blue-600': selectedRole === 'existing',
+              'border-gray-400': selectedRole !== 'existing',
+            }" @click="selectRole('existing')">
               <component :is="ExistingStudentIcon" />
-              <span
-                class="text-gray-500 dark:text-gray-400 font-bold sm:text-sm text-xs"
-                >Already Exists</span
-              >
+              <span class="text-gray-500 dark:text-gray-400 font-bold sm:text-sm text-xs">Already Exists</span>
 
-              <CheckCircle
-                v-if="selectedRole === 'existing'"
-                class="absolute bottom-[-13px] text-blue-600 bg-blue-100 rounded-full"
-                size="24"
-              />
+              <CheckCircle v-if="selectedRole === 'existing'"
+                class="absolute bottom-[-13px] text-blue-600 bg-blue-100 rounded-full" size="24" />
             </div>
 
-            <div
-              class="flex flex-col items-center rounded p-4 gap-5 border w-[130px] relative cursor-pointer"
-              :class="{
-                'border-3 border-green-600': selectedRole === 'new',
-                'border-gray-400': selectedRole !== 'new',
-              }"
-              @click="selectRole('new')"
-            >
+            <div class="flex flex-col items-center rounded p-4 gap-5 border w-[130px] relative cursor-pointer" :class="{
+              'border-3 border-green-600': selectedRole === 'new',
+              'border-gray-400': selectedRole !== 'new',
+            }" @click="selectRole('new')">
               <component :is="NewStudentIcon" />
-              <span
-                class="text-gray-500 font-bold sm:text-sm text-xs dark:text-gray-400git add"
-                >New Student</span
-              >
-              <CheckCircle
-                v-if="selectedRole === 'new'"
-                class="absolute bottom-[-13px] text-green-600 bg-green-100 rounded-full"
-                size="24"
-              />
+              <span class="text-gray-500 font-bold sm:text-sm text-xs dark:text-gray-400git add">New Student</span>
+              <CheckCircle v-if="selectedRole === 'new'"
+                class="absolute bottom-[-13px] text-green-600 bg-green-100 rounded-full" size="24" />
             </div>
           </div>
 
-          <div
-            v-if="SelectedComponent"
-            class="mt-3 mb-3 p-4 border border-gray-300 rounded-lg"
-          >
+          <div v-if="SelectedComponent" class="mt-3 mb-3 p-4 border border-gray-300 rounded-lg">
             <component :is="SelectedComponent" />
           </div>
         </div>
