@@ -45,7 +45,7 @@ const SelectedComponent = computed(() => {
         <div class="absolute inset-0 bg-black/50"></div>
         <div class="absolute inset-0 flex items-center justify-center">
           <div class="text-center w-[70%]">
-            <h3 class="font-bold text-6xl text-gray-100">
+            <h3 class="font-bold text-5xl md:text-6xl  text-gray-100">
               Knowledge From Home
             </h3>
           </div>

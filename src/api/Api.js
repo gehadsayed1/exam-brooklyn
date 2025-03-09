@@ -3,5 +3,5 @@
  export const STUDENT_ID = "student/courses";
  export const INSTRUCTORS = "course/instructors";
  export const START_EXAM  = "startExam";
- export const FINISH_EXAM_API = "https://shark-app-s8ndy.ondigitalocean.app/api/finishExam/3";  
+ export const FINISH_EXAM_API = "finishExam";  
 
