@@ -79,14 +79,15 @@ const SelectedComponent = computed(() => {
               'border-gray-400': selectedRole !== 'new',
             }" @click="selectRole('new')">
               <component :is="NewStudentIcon" />
-              <span class="text-gray-500 font-bold sm:text-sm text-xs dark:text-gray-400git add">New Student</span>
+              <span class="text-gray-500 font-bold sm:text-sm text-xs dark:text-gray-400">New Student</span>
               <CheckCircle v-if="selectedRole === 'new'"
                 class="absolute bottom-[-13px] text-green-600 bg-green-100 rounded-full" size="24" />
             </div>
           </div>
 
           <div v-if="SelectedComponent" class="mt-3 mb-3 p-4 border border-gray-300 rounded-lg">
-            <component :is="SelectedComponent" />
+            <!-- Added :key to force re-render -->
+            <component :is="SelectedComponent" :key="selectedRole" />
           </div>
         </div>
       </div>

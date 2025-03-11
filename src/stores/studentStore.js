@@ -4,6 +4,7 @@ import apiClient from "../api/axiosInstance";
 import { INSTRUCTORS, START_EXAM, STUDENT_ID, FINISH_EXAM_API } from "../api/Api";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
+import { useRouter } from "vue-router";
 
 const notyf = new Notyf({
   duration: 5000,
@@ -18,27 +19,26 @@ const notyf = new Notyf({
 export const useStudentStore = defineStore("studentStore", () => {
   const studentId = ref("");
   const courses = ref([]);
+  const router = useRouter();
   const selectedModule = ref("");
   const instructors = ref([]);
   const selectedInstructor = ref("");
-  
   const result = ref(null);
-  // startExam يحتفظ ببيانات الامتحان الذي تم حفظه من خلال استدعاء startExam API
   const startExam = ref({ questions: [] });
   const loading = ref(false);
   const error = ref(null);
 
-  // تعريف attemptId كمتغير ليكون متاحًا لجميع الدوال
+ 
   const attemptId = ref(null);
 
-  // دالة لتحميل بيانات الامتحان من localStorage في حال وجودها
+ 
   const loadExamFromLocalStorage = () => {
     const examData = localStorage.getItem("exam");
     if (examData) {
-      // نفترض أن البيانات محفوظة كـ JSON string
+    
       const parsedExam = JSON.parse(examData);
       startExam.value = parsedExam;
-      // تعيين attemptId من البيانات
+      
       if (parsedExam.data && parsedExam.data.attempt_id) {
         attemptId.value = parsedExam.data.attempt_id;
         console.log("Loaded attemptId from localStorage:", attemptId.value);
@@ -47,7 +47,6 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  // يجب استدعاء loadExamFromLocalStorage عند تحميل التطبيق أو قبل البدء بالامتحان
   loadExamFromLocalStorage();
 
   const fetchCourses = async () => {
@@ -81,9 +80,8 @@ export const useStudentStore = defineStore("studentStore", () => {
   };
 
   const submitForm = async () => {
-    // إذا كان الامتحان موجود بالفعل في اللوكل استوريج، نقوم بتحميله مباشرةً
-    if (localStorage.getItem("exam")) {
-      notyf.error("You have already started this exam");
+    
+    if (localStorage.getItem("exam")) {   
       loadExamFromLocalStorage();
       return;
     }
@@ -99,17 +97,18 @@ export const useStudentStore = defineStore("studentStore", () => {
       
       const response = await apiClient.post(START_EXAM, payload);
       console.log("Response from start exam API:", response.data);
+      if(response.data.message === "You have already started this exam"){
+        return 
+      }
       
-      // استخدام response.data بدلاً من resp.data
       localStorage.setItem("exam", JSON.stringify(response.data));
       
-      // تحديث بيانات startExam واستدعاء attemptId
+   
       startExam.value = response.data.data;
       if (response.data.data && response.data.data.attempt_id) {
         attemptId.value = response.data.data.attempt_id;
       }
-      notyf.error("You have already started this exam");
-      notyf.success("saved successfully");
+      notyf.success("Started the exam successfully");
     } catch (err) {
       notyf.error("failed to save");
     } finally {
@@ -117,20 +116,27 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  // دالة إرسال الإجابات، تستقبل payload بالشكل المطلوب:
-  // { answers: [ { q_id: ..., selected_option: ... }, ... ] }
+ 
   const submitExamAnswers = async (payload) => {
     loading.value = true;
     console.log("Submitting payload:", payload);
     try {
-      // استخدام attemptId.value هنا
       const response = await apiClient.post(`${FINISH_EXAM_API}/${attemptId.value}`, payload);
-      result.value = response.data;
-      console.log("Response from finish exam API:", response.data);
-      
-      notyf.success("Your answers have been submitted successfully!");
-      // بعد تقديم الإجابات يمكن إزالة بيانات الامتحان المحفوظة
+  
+      if (response.data) {
+        result.value = response.data;
+        console.log("Response from finish exam API:", response.data);
+  
+        // تخزين البيانات في localStorage
+        localStorage.setItem('examResult', JSON.stringify(response.data));
+  
+        notyf.success("Your answers have been submitted successfully!");
+      } else {
+        console.error("Response data is empty or undefined");
+      }
+  
       localStorage.removeItem("exam");
+      router.push({ name: 'ResultPage' });
     } catch (err) {
       console.error("Error submitting answers:", err);
       notyf.error("Failed to submit answers");
@@ -138,6 +144,10 @@ export const useStudentStore = defineStore("studentStore", () => {
       loading.value = false;
     }
   };
+  
+  
+  
+  
 
   return {
     studentId,

@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 import { useStudentStore } from '../stores/studentStore';
 import { useRouter } from 'vue-router';
+import { debounce } from 'lodash-es';
 
 const studentStore = useStudentStore();
 const router = useRouter();
@@ -15,50 +16,49 @@ const notyf = new Notyf({
   position: { x: 'center', y: 'top' },
 });
 
-// نعتمد فقط على بيانات الامتحان الموجودة في localStorage
 const examData = localStorage.getItem("exam");
-console.log("Exam data (raw) from localStorage:", examData);
-
 if (!examData) {
   notyf.error("لا توجد بيانات امتحان محفوظة.");
-  // إعادة توجيه المستخدم لصفحة بدء الامتحان
-  router.push({ name: 'ExamStartPage' });
+  router.push({ name: 'home' });  
 }
 
-// بعد التحقق من عدم كونه null، نقوم بفك الترميز
-const AllExam = JSON.parse(examData);
-console.log("AllExam after parse:", AllExam);
+let AllExam;
+try {
+  AllExam = JSON.parse(examData);
+  if (!AllExam || !AllExam.data || !AllExam.data.exam) {
+    throw new Error("بيانات الامتحان غير صحيحة.");
+  }
+} catch (error) {
+  notyf.error("خطأ في قراءة بيانات الامتحان.");
+  console.error(error);
+  router.push({ name: 'home' });
+}
 
-// نفترض أن البنية: { message: "...", data: { exam: {...} } }
 const exam = AllExam.data.exam;
-console.log("Exam object extracted from AllExam:", exam);
-
-// تعيين القيم الافتراضية بناءً على بيانات الامتحان المستخرجة من localStorage
 const duration = ref(exam.duration || 0);
+const savedTime = localStorage.getItem("timeLeft");
+const timeLeft = ref(savedTime ? parseInt(savedTime) : duration.value);
 const examId = ref(exam.id || null);
 const questions = ref(exam.questions || []);
-const result = ref(studentStore.result);
 
-console.log("Initial duration:", duration.value);
-console.log("Initial examId:", examId.value);
-console.log("Initial questions:", questions.value);
+if (!Array.isArray(questions.value) || questions.value.length === 0) {
+  notyf.error("لا توجد أسئلة في الامتحان.");
+  router.push({ name: 'home' });  
+}
 
 const submitAnswers = studentStore.submitExamAnswers;
 const examAnswers = ref([]);
 
-const timeLeft = ref(duration.value);
 const currentQuestionIndex = ref(0);
 const selectedOption = ref(null);
 const quizCompleted = ref(false);
 const quizStarted = ref(false);
 let interval;
 
-// دالة لترتيب الأسئلة عشوائيًا إذا كنت ترغب بتغيير ترتيبها عند بدء الامتحان
 const randomizeArray = (array) => {
   return [...array].sort(() => Math.random() - 0.5);
 };
 
-// الحصول على السؤال الحالي
 const currentQuestion = computed(() => {
   if (questions.value && Array.isArray(questions.value) && questions.value.length > 0) {
     return questions.value[currentQuestionIndex.value];
@@ -66,74 +66,58 @@ const currentQuestion = computed(() => {
   return null;
 });
 
-// خاصية لمعرفة إذا كان السؤال الحالي هو الأخير
 const isLastQuestion = computed(() => {
   return questions.value.length > 0 && currentQuestionIndex.value === questions.value.length - 1;
 });
 
-// دالة بدء المؤقت (تحديث كل ثانية)
 const startTimer = () => {
-  console.log("startTimer called. timeLeft:", timeLeft.value);
   interval = setInterval(() => {
     if (timeLeft.value > 0) {
       timeLeft.value--;
+      localStorage.setItem("timeLeft", timeLeft.value);
     } else {
       clearInterval(interval);
       notyf.error('Time is up! The quiz has ended.');
       quizCompleted.value = true;
       quizStarted.value = false;
-      console.log("Time is up, submitting answers...");
       submitAnswers({ answers: examAnswers.value, examId: examId.value });
       clearExamState();
     }
   }, 1000);
 };
 
-// دالة بدء الامتحان
 const handleStart = () => {
-  console.log("handleStart called.");
   if (!localStorage.getItem("examState")) {
-    console.log("No existing examState, randomizing questions.");
     questions.value = randomizeArray(questions.value);
   }
   quizStarted.value = true;
-  console.log("Quiz started. Starting timer...");
   startTimer();
   saveState();
 };
 
-// دالة التنقل للسؤال التالي أو تقديم الامتحان
 const nextQuestion = () => {
-  console.log("nextQuestion called. selectedOption:", selectedOption.value);
   if (selectedOption.value !== null && currentQuestion.value) {
     examAnswers.value.push({
       q_id: currentQuestion.value.id,
       selected_option: selectedOption.value,
     });
-    console.log("Answer pushed to examAnswers:", examAnswers.value);
   }
   if (!isLastQuestion.value) {
     currentQuestionIndex.value++;
     selectedOption.value = null;
-    console.log("Moved to next question. currentQuestionIndex:", currentQuestionIndex.value);
     saveState();
   } else {
     clearInterval(interval);
     quizCompleted.value = true;
     quizStarted.value = false;
     notyf.success('Congratulations! You have completed the quiz.');
-    console.log("Last question answered. Submitting examAnswers:", examAnswers.value);
     submitAnswers({ answers: examAnswers.value }).then(() => {
       clearExamState();
-      router.push({
-        name: 'ResultPage',
-        query: { message: result.value.message, score: result.value.score }
-      });
+      router.push({ name: 'ResultPage' });
     });
   }
 };
 
-// دالة حفظ الحالة في localStorage (examState)
 const saveState = () => {
   const examState = {
     currentQuestionIndex: currentQuestionIndex.value,
@@ -144,14 +128,11 @@ const saveState = () => {
     examId: examId.value,
     questions: questions.value,
   };
-  console.log("saveState called. examState:", examState);
   localStorage.setItem("examState", JSON.stringify(examState));
 };
 
-// دالة تحميل الحالة من localStorage (examState)
 const loadState = () => {
   const savedData = JSON.parse(localStorage.getItem("examState"));
-  console.log("loadState called. savedData:", savedData);
   if (savedData) {
     currentQuestionIndex.value = savedData.currentQuestionIndex;
     timeLeft.value = savedData.timeLeft;
@@ -160,15 +141,6 @@ const loadState = () => {
     quizStarted.value = savedData.quizStarted;
     examId.value = savedData.examId;
     questions.value = savedData.questions || questions.value;
-    console.log("State after load:", {
-      currentQuestionIndex: currentQuestionIndex.value,
-      timeLeft: timeLeft.value,
-      selectedOption: selectedOption.value,
-      examAnswers: examAnswers.value,
-      quizStarted: quizStarted.value,
-      examId: examId.value,
-      questions: questions.value,
-    });
     if (quizStarted.value) {
       startTimer();
     }
@@ -176,35 +148,33 @@ const loadState = () => {
 };
 
 const clearExamState = () => {
-  console.log("clearExamState called. Removing examState from localStorage...");
   localStorage.removeItem("examState");
+  localStorage.removeItem("timeLeft");
 };
 
 onMounted(() => {
-  console.log("onMounted hook. Loading state...");
   loadState();
 });
 
-watch(timeLeft, () => {
-  saveState();
-});
-watch(currentQuestionIndex, () => {
-  saveState();
-});
-watch(selectedOption, () => {
-  saveState();
+onBeforeUnmount(() => {
+  clearInterval(interval);
+  window.removeEventListener('beforeunload', saveState);
 });
 
-window.addEventListener('beforeunload', saveState);
+const saveStateDebounced = debounce(saveState, 1000);
+
+watch(timeLeft, saveStateDebounced);
+watch(currentQuestionIndex, saveStateDebounced);
+watch(selectedOption, saveStateDebounced);
 </script>
 
 <template>
   <div class="@container">
     <div class="text-center">
-      <h2 class="text-3xl font-bold mb-4 mt-5">Welcome to the Quiz!</h2>
+      <h2 class="text-3xl font-bold mb-4 mt-5 text-gray-900 dark:text-white">Welcome to the Quiz!</h2>
     </div>
     <div class="text-center">
-      <p class="text-xl font-semibold">
+      <p class="text-xl font-semibold text-gray-900 dark:text-white">
         Time Left:
         <span class="font-bold text-2xl text-primary border px-2 rounded-xl">
           {{ timeLeft }}
@@ -212,33 +182,23 @@ window.addEventListener('beforeunload', saveState);
         Seconds
       </p>
     </div>
-    <div class="quiz-container">
-      <div v-if="!quizStarted" class="text-center mt-4">
-        <button @click="handleStart">Start Exam</button>
+    <div class="quiz-container bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+      <div v-if="!quizStarted" class="text-center mt-4 mb-4">
+        <button @click="handleStart" class="btn-start bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">Start Exam</button>
       </div>
       <div v-if="quizStarted">
         <div class="question-container" v-if="currentQuestion">
-          <h3 class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200">
+          <h3 class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200 dark:bg-primary dark:text-gray-800">
             {{ currentQuestion.question_text }}
           </h3>
-          <div
-            v-for="(option, key) in currentQuestion.options"
-            :key="key"
-            class="option flex items-center gap-3 mt-2 border border-primary p-2 rounded-2xl cursor-pointer transition-all"
-            :class="{ 'selected-option': selectedOption === key }"
-            @click="selectedOption = key"
-          >
-            <input
-              type="radio"
-              :id="'option-' + key"
-              v-model="selectedOption"
-              :value="key"
-              class="radio-btn"
-            />
-            <label :for="'option-' + key" class="w-full cursor-pointer">{{ option }}</label>
+          <div v-for="(option, key) in currentQuestion.options" :key="key"
+            class="option flex items-center gap-3 mt-2 border border-primary p-2 rounded-2xl cursor-pointer transition-all dark:border-gray-600"
+            :class="{ 'selected-option': selectedOption === key }" @click="selectedOption = key">
+            <input type="radio" :id="'option-' + key" v-model="selectedOption" :value="key" class="radio-btn" />
+            <label :for="'option-' + key" class="w-full cursor-pointer text-gray-900 dark:text-white">{{ option }}</label>
           </div>
         </div>
-        <button @click="nextQuestion" :disabled="!selectedOption">
+        <button @click="nextQuestion" :disabled="!selectedOption" class="btn-next bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
           {{ isLastQuestion ? 'Submit Exam' : 'Next Question' }}
         </button>
       </div>
@@ -257,6 +217,7 @@ window.addEventListener('beforeunload', saveState);
   margin-left: auto;
   margin-right: auto;
 }
+
 button {
   padding: 10px 50px;
   background-color: #092c67;
@@ -266,13 +227,16 @@ button {
   cursor: pointer;
   margin-top: 20px;
 }
+
 button:hover {
   background-color: #073481;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
 button:disabled {
   background-color: #ccc;
 }
+
 .selected-option {
   background-color: #d3e0ff;
   border-radius: 10px;
