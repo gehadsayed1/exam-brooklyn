@@ -50,7 +50,7 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <div class="p-4 bg-white rounded-lg shadow-md">
+  <div class="p-4 bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
     <div class="mb-5 relative">
       <label for="name-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Student ID:
@@ -65,9 +65,9 @@ const submitForm = async () => {
 
     <div class="mb-5" v-show="studentStore.courses.data">
       <label for="module-select" class="block text-sm font-medium text-gray-900">Module Name:</label>
-      <select v-model="studentStore.selectedModule" id="module-select" class="input-field">
+      <select  v-model="studentStore.selectedModule" id="module-select" class="input-field ">
         <option value="" disabled>Choose a Module</option>
-        <option v-for="course in studentStore.courses.data" :key="course.id" :value="course.id">
+        <option class="dark:bg-gray-800" v-for="course in studentStore.courses.data" :key="course.id" :value="course.id">
           {{ course.name }}
         </option>
       </select>
@@ -77,7 +77,7 @@ const submitForm = async () => {
       <label for="instructor-select" class="block text-sm font-medium text-gray-900">Instructor:</label>
       <select v-model="studentStore.selectedInstructor" id="instructor-select" class="input-field">
         <option value="" disabled>Choose an Instructor</option>
-        <option v-for="instructor in studentStore.instructors.data" :key="instructor.id" :value="instructor.id">
+        <option class="dark:bg-gray-800" v-for="instructor in studentStore.instructors.data" :key="instructor.id" :value="instructor.id">
           {{ instructor.name }}
         </option>
       </select>

@@ -38,7 +38,7 @@ const SelectedComponent = computed(() => {
 </script>
 
 <template>
-  <div class="login dark:bg-gray-700">
+  <div class="login dark:bg-gray-700 min-h-screen">
     <div class="grid sm:grid-cols-2 grid-cols-1 p-5 sm:p-0 relative">
       <div class="relative w-[90%] h-[110vh] hidden sm:block">
         <img :src="hero" alt="hero img" class="h-full w-full object-cover" />
@@ -85,7 +85,7 @@ const SelectedComponent = computed(() => {
             </div>
           </div>
 
-          <div v-if="SelectedComponent" class="mt-3 mb-3 p-4 border border-gray-300 rounded-lg">
+          <div v-if="SelectedComponent" class="mt-3 mb-3 p-4 border border-gray-300 dark:bg-gray-800 rounded-lg">
             <!-- Added :key to force re-render -->
             <component :is="SelectedComponent" :key="selectedRole" />
           </div>

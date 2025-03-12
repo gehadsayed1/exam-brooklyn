@@ -9,7 +9,7 @@ const score = ref('No score available');
 
 const redirectToHome = () => {
   console.log("📌 User tried to go back! Redirecting to home...");
-  window.location.replace('/'); // 
+  window.location.replace('/'); 
 };
 
 
@@ -40,9 +40,9 @@ console.log('Score:', score.value);
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center h-[70vh]">
+  <div class="flex flex-col items-center justify-center h-[100vh] dark:bg-gray-700">
     <img :src="thank" alt="Thank you image">
     <h1 class="text-2xl text-green-700 font-bold mb-4 mt-10">{{ message }}</h1>
-    <p class="text-lg">Your score: <span class="font-bold text-primary">({{ score }})</span></p>
+    <p class="text-lg dark:text-gray-300">Your score: <span class="font-bold text-primary">({{ score }})</span></p>
   </div>
 </template>

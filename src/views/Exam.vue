@@ -28,14 +28,13 @@ try {
 } catch (error) {
   notyf.error("خطأ في قراءة بيانات الامتحان.");
   console.error(error);
-  // router.replace('/');
+  window.location.replace('/');
 }
 
 const exam = AllExam.data.exam;
 const duration = ref(exam.duration || 0);
 const savedTime = localStorage.getItem("timeLeft");
 const timeLeft = ref(savedTime ? parseInt(savedTime) : duration.value);
-const attemptId = ref( examData.attempt_id|| null);
 const questions = ref(exam.questions || []);
 
 if (!Array.isArray(questions.value) || questions.value.length === 0) {
@@ -179,14 +178,14 @@ watch(selectedOption, saveStateDebounced);
 </script>
 
 <template>
-  <div class="@container">
+  <div class="@container dark:bg-gray-700 min-h-screen">
     <div class="text-center">
       <h2 class="text-3xl font-bold mb-4 mt-5 text-gray-900 dark:text-white">Welcome to the Quiz!</h2>
     </div>
     <div class="text-center">
       <p class="text-xl font-semibold text-gray-900 dark:text-white">
         Time Left:
-        <span class="font-bold text-2xl text-primary border px-2 rounded-xl">
+        <span class="font-bold text-2xl text-primary dark:text-gray-300 border px-2 rounded-xl">
           {{ timeLeft }}
         </span>
         Seconds
@@ -198,7 +197,7 @@ watch(selectedOption, saveStateDebounced);
       </div>
       <div v-if="quizStarted">
         <div class="question-container" v-if="currentQuestion">
-          <h3 class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200 dark:bg-primary dark:text-gray-800">
+          <h3 class="text-xl font-bold text-center border border-gray-300 p-4 rounded-2xl shadow bg-primary text-gray-200 dark:bg-primary dark:text-gray-400">
             {{ currentQuestion.question_text }}
           </h3>
           <div v-for="(option, key) in currentQuestion.options" :key="key"
@@ -224,7 +223,6 @@ watch(selectedOption, saveStateDebounced);
   font-family: Arial, sans-serif;
   margin: 20px;
   padding: 10px;
-  background-color: #f9f9f9;
   border-radius: 8px;
   max-width: 800px;
   margin-left: auto;
