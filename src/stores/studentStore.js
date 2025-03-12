@@ -29,26 +29,28 @@ export const useStudentStore = defineStore("studentStore", () => {
   const error = ref(null);
 
  
-  const attemptId = ref(null);
+  // const attemptId = ref(null);
 
  
-  const loadExamFromLocalStorage = () => {
-    const examData = localStorage.getItem("exam");
-    if (examData) {
+  // const loadExamFromLocalStorage = () => {
+  //   const examData = localStorage.getItem("exam");
+  //   if (examData) {
     
-      const parsedExam = JSON.parse(examData);
-      startExam.value = parsedExam;
+  //     const parsedExam = JSON.parse(examData);
+  //     startExam.value = parsedExam;
       
-      if (parsedExam.data && parsedExam.data.attempt_id) {
-        attemptId.value = parsedExam.data.attempt_id;
-        console.log("Loaded attemptId from localStorage:", attemptId.value);
-      }
-      notyf.success("تم تحميل بيانات الامتحان السابق");
-    }
-  };
+  //     if (parsedExam.data && parsedExam.data.attempt_id) {
+  //       attemptId.value = parsedExam.data.attempt_id;
+  //       console.log("Loaded attemptId from localStorage:", attemptId.value);
+  //     }
+  //     notyf.success("تم تحميل بيانات الامتحان السابق");
+  //   }
+  // };
 
-  loadExamFromLocalStorage();
+  // loadExamFromLocalStorage();
+  
 
+// fetchCourses
   const fetchCourses = async () => {
     if (!studentId.value.trim()) {
       error.value = "please enter student id";
@@ -66,6 +68,7 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
+  // fetchInstructors
   const fetchInstructors = async () => {
     if (!selectedModule.value) return;
     loading.value = true;
@@ -81,10 +84,10 @@ export const useStudentStore = defineStore("studentStore", () => {
 
   const submitForm = async () => {
     
-    if (localStorage.getItem("exam")) {   
-      loadExamFromLocalStorage();
-      return;
-    }
+    // if (localStorage.getItem("exam")) {   
+    //   loadExamFromLocalStorage();
+    //   return;
+    // }
 
     loading.value = true;
     try {
@@ -97,20 +100,18 @@ export const useStudentStore = defineStore("studentStore", () => {
       
       const response = await apiClient.post(START_EXAM, payload);
       console.log("Response from start exam API:", response.data);
-      if(response.data.message === "You have already started this exam"){
-        return 
-      }
       
-      localStorage.setItem("exam", JSON.stringify(response.data));
-      
-   
-      startExam.value = response.data.data;
-      if (response.data.data && response.data.data.attempt_id) {
-        attemptId.value = response.data.data.attempt_id;
+      if (response.data.message == "Exam started successfully") {
+        localStorage.setItem("exam", JSON.stringify(response.data));
+        startExam.value = response.data.data;
+      //  attemptId.value = response.data.data.attempt_id;
+       router.replace({ name: 'exam' });
+      }else{
+        notyf.error(response.data.message);
       }
-      notyf.success("Started the exam successfully");
     } catch (err) {
-      notyf.error("failed to save");
+      // notyf.error("failed to save");
+      console.error(err)
     } finally {
       loading.value = false;
     }
@@ -119,31 +120,70 @@ export const useStudentStore = defineStore("studentStore", () => {
  
   const submitExamAnswers = async (payload) => {
     loading.value = true;
-    console.log("Submitting payload:", payload);
+    
+    // ✅ استرجاع attemptId من localStorage بشكل صحيح
+    const examString = localStorage.getItem("exam");
+    if (!examString) {
+      console.error("❌ Exam data is missing in localStorage.");
+      notyf.error("حدث خطأ، بيانات الامتحان غير موجودة.");
+      loading.value = false;
+      return;
+    }
+  
+    // ✅ تحويل `exam` من `string` إلى JSON
+    let exam;
     try {
-      const response = await apiClient.post(`${FINISH_EXAM_API}/${attemptId.value}`, payload);
+      exam = JSON.parse(examString);
+    } catch (error) {
+      console.error("❌ Failed to parse exam data from localStorage:", error);
+      notyf.error("خطأ في قراءة بيانات الامتحان.");
+      loading.value = false;
+      return;
+    }
+  
+    // ✅ التحقق من وجود attempt_id داخل exam.data
+    const storedAttemptId = exam?.data?.attempt_id;
+    if (!storedAttemptId) {
+      console.error("❌ Attempt ID is missing in parsed exam data.");
+      notyf.error("حدث خطأ، معرف الامتحان غير متاح.");
+      loading.value = false;
+      return;
+    }
+  
+    console.log("📌 Attempt ID retrieved:", storedAttemptId);
+  
+    try {
+      const response = await apiClient.post(`${FINISH_EXAM_API}/${storedAttemptId}`, payload);
   
       if (response.data) {
         result.value = response.data;
-        console.log("Response from finish exam API:", response.data);
+        console.log("✅ Response from finish exam API:", response.data);
   
-        // تخزين البيانات في localStorage
+        // ✅ تخزين نتيجة الامتحان في localStorage
         localStorage.setItem('examResult', JSON.stringify(response.data));
   
-        notyf.success("Your answers have been submitted successfully!");
+        notyf.success("تم إرسال الإجابات بنجاح!");
       } else {
-        console.error("Response data is empty or undefined");
+        console.error("⚠️ Response data is empty or undefined");
       }
   
+      // ✅ حذف بيانات الامتحان بعد الإرسال
       localStorage.removeItem("exam");
-      router.push({ name: 'ResultPage' });
+      localStorage.removeItem("attemptId");
+  
+      
+      setTimeout(() => {
+        router.replace({ name: 'ResultPage' });
+      }, 500);
     } catch (err) {
-      console.error("Error submitting answers:", err);
-      notyf.error("Failed to submit answers");
+      console.error("❌ Error submitting answers:", err);
+      notyf.error("فشل في إرسال الإجابات.");
     } finally {
       loading.value = false;
     }
   };
+  
+  
   
   
   

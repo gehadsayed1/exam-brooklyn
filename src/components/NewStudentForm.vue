@@ -43,7 +43,7 @@ const router = useRouter();
       </div>
     </div>
     <button
-       @click="router.push({ name: 'exam' });"
+       @click="router.replace({ name: 'exam' });"
         type="button"
         class="text-white cursor-pointer bg-primary hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-[100%] sm:w-auto px-15 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
       >

@@ -1,11 +1,17 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import thank from '../assets/download.png'; // التأكد من استيراد الصورة بشكل صحيح
+import thank from "../assets/thank.png"; 
 
 const router = useRouter();
 const message = ref('No message available');
 const score = ref('No score available');
+
+const redirectToHome = () => {
+  console.log("📌 User tried to go back! Redirecting to home...");
+  window.location.replace('/'); // 
+};
+
 
 onMounted(() => {
   const storedResult = localStorage.getItem('examResult');
@@ -14,36 +20,21 @@ onMounted(() => {
     message.value = result.message || 'No message available';
     score.value = result.score || 'No score available';
   } else {
-    // إذا لم تكن البيانات موجودة في localStorage
     message.value = 'No exam result found';
     score.value = 'No score available';
   }
 
+ 
+  history.pushState(null, null, window.location.href);
   window.addEventListener('popstate', redirectToHome);
 });
-
 
 
 onBeforeUnmount(() => {
   window.removeEventListener('popstate', redirectToHome);
 });
 
-const redirectToHome = () => {
-  // التأكد من أن البيانات موجودة قبل التوجيه إلى الصفحة الرئيسية
-  const storedResult = localStorage.getItem('examResult');
-  if (storedResult) {
-    const result = JSON.parse(storedResult);
-    // فقط قم بالتوجيه إذا كانت البيانات موجودة
-    router.push({ name: 'home' });
-  } else {
-    // إظهار رسالة أو التعامل مع الحالة عندما لا تكون البيانات موجودة
-    message.value = 'No exam result found';
-    score.value = 'No score available';
-    router.push({ name: 'home' });
-  }
-};
-
-
+// Debugging
 console.log('Message:', message.value);  
 console.log('Score:', score.value); 
 </script>

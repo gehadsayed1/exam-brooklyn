@@ -11,7 +11,7 @@ let timeout = null;
 
 const examData = localStorage.getItem("exam");
 if (examData) {
-  router.push({ name: "exam" });
+  router.replace({ name: "exam" });
    
 }
 
@@ -44,7 +44,7 @@ const submitForm = async () => {
     studentStore.selectedModule = null;
     studentStore.selectedInstructor = null;
 
-    router.push({ name: "exam" }); 
+    router.replace({ name: "exam" }); 
   }
 };
 </script>

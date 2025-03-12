@@ -17,10 +17,7 @@ const notyf = new Notyf({
 });
 
 const examData = localStorage.getItem("exam");
-if (!examData) {
-  notyf.error("لا توجد بيانات امتحان محفوظة.");
-  router.push({ name: 'home' });  
-}
+
 
 let AllExam;
 try {
@@ -31,24 +28,23 @@ try {
 } catch (error) {
   notyf.error("خطأ في قراءة بيانات الامتحان.");
   console.error(error);
-  router.push({ name: 'home' });
+  // router.replace('/');
 }
 
 const exam = AllExam.data.exam;
 const duration = ref(exam.duration || 0);
 const savedTime = localStorage.getItem("timeLeft");
 const timeLeft = ref(savedTime ? parseInt(savedTime) : duration.value);
-const examId = ref(exam.id || null);
+const attemptId = ref( examData.attempt_id|| null);
 const questions = ref(exam.questions || []);
 
 if (!Array.isArray(questions.value) || questions.value.length === 0) {
   notyf.error("لا توجد أسئلة في الامتحان.");
-  router.push({ name: 'home' });  
+  // router.replace('/');  
 }
 
 const submitAnswers = studentStore.submitExamAnswers;
-const examAnswers = ref([]);
-
+const examAnswers = ref([]); 
 const currentQuestionIndex = ref(0);
 const selectedOption = ref(null);
 const quizCompleted = ref(false);
@@ -97,14 +93,21 @@ const handleStart = () => {
 
 const nextQuestion = () => {
   if (selectedOption.value !== null && currentQuestion.value) {
-    examAnswers.value.push({
-      q_id: currentQuestion.value.id,
-      selected_option: selectedOption.value,
-    });
+    const answerIndex = examAnswers.value.findIndex(answer => answer.q_id === currentQuestion.value.id);
+    if (answerIndex >= 0) {
+      examAnswers.value[answerIndex].selected_option = selectedOption.value; // تحديث الإجابة
+    } else {
+      // إذا كانت الإجابة غير موجودة، أضفها
+      examAnswers.value.push({
+        q_id: currentQuestion.value.id,
+        selected_option: selectedOption.value,
+      });
+    }
   }
+
   if (!isLastQuestion.value) {
     currentQuestionIndex.value++;
-    selectedOption.value = null;
+    selectedOption.value = examAnswers.value.find(answer => answer.q_id === currentQuestion.value.id)?.selected_option || null;
     saveState();
   } else {
     clearInterval(interval);
@@ -113,8 +116,17 @@ const nextQuestion = () => {
     notyf.success('Congratulations! You have completed the quiz.');
     submitAnswers({ answers: examAnswers.value }).then(() => {
       clearExamState();
-      router.push({ name: 'ResultPage' });
+      router.replace("/exam");
     });
+  }
+};
+
+
+const previousQuestion = () => {
+  if (currentQuestionIndex.value > 0) {
+    currentQuestionIndex.value--;
+    selectedOption.value = examAnswers.value.find(answer => answer.q_id === currentQuestion.value.id)?.selected_option || null; // استرجاع الإجابة المخزنة
+    saveState();
   }
 };
 
@@ -125,7 +137,6 @@ const saveState = () => {
     selectedOption: selectedOption.value,
     examAnswers: examAnswers.value,
     quizStarted: quizStarted.value,
-    examId: examId.value,
     questions: questions.value,
   };
   localStorage.setItem("examState", JSON.stringify(examState));
@@ -139,7 +150,6 @@ const loadState = () => {
     selectedOption.value = savedData.selectedOption;
     examAnswers.value = savedData.examAnswers || [];
     quizStarted.value = savedData.quizStarted;
-    examId.value = savedData.examId;
     questions.value = savedData.questions || questions.value;
     if (quizStarted.value) {
       startTimer();
@@ -198,6 +208,9 @@ watch(selectedOption, saveStateDebounced);
             <label :for="'option-' + key" class="w-full cursor-pointer text-gray-900 dark:text-white">{{ option }}</label>
           </div>
         </div>
+        <button @click="previousQuestion" class="btn-prev bg-gray-600 text-white hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600">
+          Previous
+        </button>
         <button @click="nextQuestion" :disabled="!selectedOption" class="btn-next bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600">
           {{ isLastQuestion ? 'Submit Exam' : 'Next Question' }}
         </button>
@@ -242,5 +255,9 @@ button:disabled {
   border-radius: 10px;
   padding: 10px;
   transition: background-color 0.3s ease-in-out;
+}
+
+.btn-prev {
+  margin-right: 10px;
 }
 </style>
