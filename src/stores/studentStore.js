@@ -1,7 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import apiClient from "../api/axiosInstance";
-import { INSTRUCTORS, START_EXAM, STUDENT_ID, FINISH_EXAM_API, SUBMIT_EXAM_ANSWERS } from "../api/Api";
+import {
+  INSTRUCTORS,
+  START_EXAM,
+  STUDENT_ID,
+  FINISH_EXAM_API,
+  SUBMIT_EXAM_ANSWERS,
+} from "../api/Api";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 import { useRouter } from "vue-router";
@@ -25,9 +31,10 @@ export const useStudentStore = defineStore("studentStore", () => {
   const error = ref(null);
   const attemptId = ref(null);
   const examAnswers = ref([]);
-  const message = ref("");
 
-  const storedAttemptId = computed(() => attemptId.value || localStorage.getItem("attemptId"));
+  const storedAttemptId = computed(
+    () => attemptId.value || sessionStorage.getItem("attemptId")
+  );
 
   const fetchCourses = async () => {
     if (!studentId.value.trim()) {
@@ -47,7 +54,9 @@ export const useStudentStore = defineStore("studentStore", () => {
     if (!selectedModule.value) return;
     loading.value = true;
     try {
-      const response = await apiClient.get(`${INSTRUCTORS}/${selectedModule.value}`);
+      const response = await apiClient.get(
+        `${INSTRUCTORS}/${selectedModule.value}`
+      );
       instructors.value = response.data;
     } finally {
       loading.value = false;
@@ -58,91 +67,98 @@ export const useStudentStore = defineStore("studentStore", () => {
     loading.value = true;
     try {
       const payload = {
-        st_num: studentId.value,
-        course_id: selectedModule.value,
         ins_id: selectedInstructor.value,
+        course_id: selectedModule.value,
+        st_num: studentId.value,
       };
+
+      console.log(payload);
+
       const response = await apiClient.post(START_EXAM, payload);
+      console.log(response.data);
+
       startExam.value = response.data;
       attemptId.value = startExam.value.data.attempt_id;
-      localStorage.setItem("attemptId", attemptId.value);
-      notyf.success(response.data.message);
-      router.replace({ name: "exam" });
-    } catch {
-      notyf.error("Failed to start the exam");
+      examAnswers.value = startExam.value.data.answers;
+      console.log(startExam.value.data.answers);
+      sessionStorage.setItem("attemptId", attemptId.value);
+      notyf.success("Exam started successfully.");
+      router.push("/examPage");
+    } catch (error) {
+      console.error("Error details:", error);
+      notyf.error("Something went wrong. Please try again.");
+      router.replace({ name: "home" });
     } finally {
       loading.value = false;
     }
   };
 
-  const updateAnswer = async (newAnswer) => {
-    if (!newAnswer || !newAnswer.q_id || !newAnswer.selected_option) return;
-  
-    const existingIndex = examAnswers.value.findIndex(a => a.q_id === newAnswer.q_id);
-  
-    if (existingIndex !== -1) {
-      examAnswers.value[existingIndex].selected_option = newAnswer.selected_option;
-    } else {
-      examAnswers.value.push(newAnswer);
-    }
-  
-    await submitExamAnswers(newAnswer); // ✅ Send answer immediately
-  };
-  
-  const submitExamAnswers = async (answer) => {
-    if (!storedAttemptId.value || !answer || !answer.q_id || !answer.selected_option) return;
-  
-    try {
-      const payload = {
-        attempt_id: storedAttemptId.value,
-        answers: examAnswers.value, // ✅ Send the full answers array
-      };
-  
-      await apiClient.post(`${SUBMIT_EXAM_ANSWERS}/${storedAttemptId.value}`, payload);
-    } catch {
-      notyf.error("Error submitting answer");
-    }
-  };
-  
-
-  const submitExamProgress = async () => {
-    if (!storedAttemptId.value || examAnswers.value.length === 0) return;
-
-    try {
-      const payload = { attempt_id: storedAttemptId.value, answers: examAnswers.value };
-      await apiClient.post(`${FINISH_EXAM_API}/${storedAttemptId.value}`, payload);
-    } catch {
-      notyf.error("Error saving progress");
-    }
-  };
-
-  const submitFinalExam = async () => {
-    loading.value = true;
-    if (!storedAttemptId.value || examAnswers.value.length === 0) {
-      notyf.error("No answers to submit.");
+  const submitExamAnswers = async () => {
+    const answersFromStorage = sessionStorage.getItem("answers");
+    if (!answersFromStorage) {
       return;
     }
 
     try {
-      const payload = {
-        attempt_id: storedAttemptId.value,
-        answers: examAnswers.value.filter(a => a.q_id && a.selected_option),
+      const answers = JSON.parse(answersFromStorage);
+      const finalPayload = {
+        answers: answers,
       };
 
-      if (payload.answers.length === 0) {
-        notyf.error("No valid answers to submit.");
+      console.log("Answers to submit:", answers);
+
+      const res = await apiClient.post(
+        `${SUBMIT_EXAM_ANSWERS}/${storedAttemptId.value}`,
+        finalPayload
+      );
+      console.log(res.data);
+    } catch (error) {
+      notyf.error("Error submitting answers.");
+      console.error("Error:", error.response || error);
+    }
+  };
+
+  setInterval(submitExamAnswers, 5000);
+
+  const submitFinalExam = async (payload) => {
+    try {
+      let answers = payload.answers;
+
+      if (!answers) {
+        const answersFromStorage = sessionStorage.getItem("answers");
+        answers = answersFromStorage ? JSON.parse(answersFromStorage) : [];
+      }
+
+      if (answers.length === 0) {
+        notyf.error("No answers available to submit.");
         return;
       }
 
-      await apiClient.post(`${FINISH_EXAM_API}/${storedAttemptId.value}`, payload);
-      notyf.success("Exam submitted successfully!");
-      clearExamData();
-      router.push({ name: "ResultPage" });
+      console.log("Answers:", answers);
 
-    } catch {
-      notyf.error("Failed to submit the exam.");
-    } finally {
-      loading.value = false;
+      const finalPayload = {
+        answers: answers,
+      };
+
+      console.log("Final Payload:", finalPayload);
+
+      const res = await apiClient.post(
+        `${FINISH_EXAM_API}/${storedAttemptId.value}`,
+        finalPayload
+      );
+
+      console.log("Response:", res.data);
+
+      if (res.data && res.data.message) {
+        notyf.success("Exam submitted successfully.");
+        clearExamData();
+        router.push({ name: "ResultPage" });
+      } else {
+        notyf.error("Error in closing the exam. Please try again.");
+      }
+    } catch (error) {
+      notyf.error("Error saving exam progress.");
+      console.error("Error:", error.response || error);
     }
   };
 
@@ -150,10 +166,9 @@ export const useStudentStore = defineStore("studentStore", () => {
     attemptId.value = null;
     examAnswers.value = [];
     startExam.value = { questions: [] };
-    localStorage.removeItem("attemptId");
+    sessionStorage.removeItem("attemptId");
+    sessionStorage.removeItem("answers");
   };
-
-  setInterval(submitExamProgress, 5 * 60 * 1000);
 
   return {
     studentId,
@@ -164,15 +179,11 @@ export const useStudentStore = defineStore("studentStore", () => {
     selectedInstructor,
     loading,
     error,
-    attemptId,
     examAnswers,
     fetchCourses,
     fetchInstructors,
     submitForm,
     submitExamAnswers,
-    submitExamProgress,
     submitFinalExam,
-    updateAnswer,
-    clearExamData,
   };
 });

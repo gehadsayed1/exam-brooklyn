@@ -5,7 +5,7 @@ import Toggle from "./ToggleTheme.vue"
 </script>
 
 <template>
-<nav class="bg-[#EEEEEE] dark:bg-gray-800">
+<nav class="bg-[#EEEEEE] dark:bg-gray-700">
  <div class="@container">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
     <a href="/">

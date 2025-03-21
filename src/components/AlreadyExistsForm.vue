@@ -5,15 +5,10 @@ import { useStudentStore } from "../stores/studentStore";
 import { IdCard } from "lucide-vue-next";
 
 const studentStore = useStudentStore();
-const router = useRouter();
 const isSubmitting = ref(false);
 let timeout = null; 
 
-const examData = localStorage.getItem("exam");
-if (examData) {
-  router.replace({ name: "exam" });
-   
-}
+
 
 watch(() => studentStore.studentId, (newId) => {
   if (timeout) {
@@ -42,15 +37,12 @@ const submitForm = async () => {
     // Empty the form after successful submission
     studentStore.studentId = ''; 
     studentStore.selectedModule = null;
-    studentStore.selectedInstructor = null;
-
-    router.replace({ name: "exam" }); 
-  }
-};
+    studentStore.selectedInstructor = null; 
+  }}
 </script>
 
 <template>
-  <div class="p-4 bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
+  <div class="p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-white">
     <div class="mb-5 relative">
       <label for="name-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
         Student ID:
@@ -64,7 +56,7 @@ const submitForm = async () => {
     </div>
 
     <div class="mb-5" v-show="studentStore.courses.data">
-      <label for="module-select" class="block text-sm font-medium text-gray-900">Module Name:</label>
+      <label for="module-select" class="block dark:text-gray-300 text-sm font-medium text-gray-900">Module Name:</label>
       <select  v-model="studentStore.selectedModule" id="module-select" class="input-field ">
         <option value="" disabled>Choose a Module</option>
         <option class="dark:bg-gray-800" v-for="course in studentStore.courses.data" :key="course.id" :value="course.id">
@@ -74,7 +66,7 @@ const submitForm = async () => {
     </div>
 
     <div class="mb-5" v-show="studentStore.instructors.data">
-      <label for="instructor-select" class="block text-sm font-medium text-gray-900">Instructor:</label>
+      <label for="instructor-select" class="block dark:text-gray-300 text-sm font-medium text-gray-900">Instructor:</label>
       <select v-model="studentStore.selectedInstructor" id="instructor-select" class="input-field">
         <option value="" disabled>Choose an Instructor</option>
         <option class="dark:bg-gray-800" v-for="instructor in studentStore.instructors.data" :key="instructor.id" :value="instructor.id">

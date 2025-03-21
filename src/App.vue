@@ -3,7 +3,7 @@ import Nav from "./components/NavBar.vue"
 </script>
 
 <template>
-  <div>
+  <div class="dark:bg-gray-800 min-h-screen">
     <Nav />
     <router-view></router-view> 
   </div>

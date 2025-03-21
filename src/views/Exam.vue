@@ -15,16 +15,17 @@ const notyf = new Notyf({
 });
 
 const examData = computed(() => studentStore.startExam?.data || {});
-const attemptId = computed(() => examData.value?.attempt_id);
 const remainingTime = computed(() => examData.value?.remaining_time || 0);
 const exam = computed(() => examData.value?.exam || {});
 const questions = computed(() => exam.value?.questions || []);
 const previousAnswers = computed(() => examData.value?.answers || []);
 
+const answersArray = ref([]);
 const timeLeft = ref(remainingTime.value);
 const currentQuestionIndex = ref(0);
 const selectedOption = ref(null);
 const quizStarted = ref(false);
+const isSubmitting = ref(false);
 let interval;
 
 const currentQuestion = computed(
@@ -34,68 +35,98 @@ const isLastQuestion = computed(
   () => currentQuestionIndex.value === questions.value.length - 1
 );
 
-const loadPreviousAnswers = () => {
-  if (previousAnswers.value.length > 0) {
-    studentStore.examAnswers = previousAnswers.value.map((ans) => ({
-      q_id: ans.q_id,
-      selected_option: ans.selected_option,
-    }));
+const answeredCount = computed(() =>
+  studentStore.examAnswers.length
+);
+
+// Track if time is finished or not
+const timeEnded = computed(() => remainingTime.value <= 0);
+
+// Start timer
+const startTimer = () => {
+  interval = setInterval(() => {
+    let integerPart = Math.floor(timeLeft.value);
+    let decimalPart = Math.round((timeLeft.value - integerPart) * 100);
+
+    if (decimalPart > 0) {
+      decimalPart--;
+    } else if (integerPart > 0) {
+      integerPart--;
+      decimalPart = 99;
+    } else {
+      clearInterval(interval);
+      notyf.error("Time is up! Exam ended.");
+      router.replace({ name: "home" });
+      return;
+    }
+
+    timeLeft.value = integerPart + decimalPart / 100;
+  }, 1000);
+};
+
+// Save answers to session storage
+const saveAnswer = () => {
+  if (selectedOption.value !== null && currentQuestion.value) {
+    const answer = {
+      q_id: currentQuestion.value.id,
+      selected_option: selectedOption.value,
+    };
+
+    const existingIndex = studentStore.examAnswers.findIndex(
+      (a) => a.q_id === currentQuestion.value.id
+    );
+
+    if (existingIndex !== -1) {
+      studentStore.examAnswers[existingIndex] = answer;
+    } else {
+      studentStore.examAnswers.push(answer);
+    }
+
+    const answersIndex = answersArray.value.findIndex(
+      (a) => a.q_id === currentQuestion.value.id
+    );
+    if (answersIndex !== -1) {
+      answersArray.value[answersIndex] = answer;
+    } else {
+      answersArray.value.push(answer);
+    }
+
+    sessionStorage.setItem("answers", JSON.stringify(answersArray.value));
   }
 };
 
 const loadSelectedOption = () => {
-  const savedAnswer = studentStore.examAnswers.find(
+  const savedAnswer = previousAnswers.value.find(
     (ans) => ans.q_id === currentQuestion.value?.id
   );
-  selectedOption.value = savedAnswer ? savedAnswer.selected_option : null;
-};
+  const modifiedAnswer = studentStore.examAnswers.find(
+    (ans) => ans.q_id === currentQuestion.value?.id
+  );
 
-const startTimer = () => {
-  interval = setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--;
-    } else {
-      clearInterval(interval);
-      notyf.error("Time is up! Exam ended.");
-      submitFinalExam();
-    }
-  }, 60000);
+  if (modifiedAnswer) {
+    selectedOption.value = modifiedAnswer.selected_option;
+  } else if (savedAnswer) {
+    selectedOption.value = savedAnswer.selected_option;
+  } else {
+    selectedOption.value = null;
+  }
 };
 
 const handleStart = () => {
   quizStarted.value = true;
   timeLeft.value = remainingTime.value;
-  loadPreviousAnswers();
   startTimer();
   loadSelectedOption();
 };
 
-const saveAnswer = async () => {
-  if (selectedOption.value !== null && currentQuestion.value) {
-    const answer = {
-      q_id: currentQuestion.value.id,
-      selected_option: selectedOption.value,
-    };
-
-    await studentStore.updateAnswer(answer);
-  }
-};
-
 const nextQuestion = async () => {
   if (selectedOption.value !== null && currentQuestion.value) {
-    const answer = {
-      q_id: currentQuestion.value.id,
-      selected_option: selectedOption.value,
-    };
-    console.log(answer);
-
-    studentStore.updateAnswer(answer);
-
+    saveAnswer();
     if (!isLastQuestion.value) {
       currentQuestionIndex.value++;
       loadSelectedOption();
     } else {
-      submitFinalExam();
+      await submitFinalExam({ answers: answersArray.value });
     }
   } else {
     notyf.error("Please select an answer before proceeding.");
@@ -104,6 +135,7 @@ const nextQuestion = async () => {
 
 const previousQuestion = () => {
   if (currentQuestionIndex.value > 0) {
+    saveAnswer();
     currentQuestionIndex.value--;
     loadSelectedOption();
   }
@@ -115,110 +147,101 @@ const goToQuestion = (index) => {
   loadSelectedOption();
 };
 
-const submitProgress = async () => {
-  if (!attemptId.value || studentStore.examAnswers.length === 0) return;
-  try {
-    const payload = {
-      attempt_id: attemptId.value,
-      answers: studentStore.examAnswers,
-    };
-    await studentStore.submitExamAnswers(payload);
-  } catch {
-    notyf.error("Error saving progress");
-  }
-};
-
 const submitFinalExam = async () => {
-  clearInterval(interval);
-  quizStarted.value = false;
-  notyf.success("Exam completed successfully!");
-
-  if (!attemptId.value || studentStore.examAnswers.length === 0) return;
-
   try {
-    const payload = { answers: studentStore.examAnswers };
-    await studentStore.submitExamAnswers(payload);
-    studentStore.clearExamData();
-    router.push({ name: "ResultPage" });
+    saveAnswer();
+    const payload = { answers: answersArray.value };
+    isSubmitting.value = true;
+    await studentStore.submitFinalExam(payload);
+    isSubmitting.value = false;
+    clearInterval(interval);
+    quizStarted.value = false;
   } catch {
     notyf.error("Error submitting final exam");
   }
 };
 
-setInterval(submitProgress, 5 * 60 * 1000);
-
 onMounted(() => {
-  if (quizStarted.value) {
+  if (remainingTime.value > 0) {
     startTimer();
-    loadPreviousAnswers();
-    loadSelectedOption();
   }
 });
 
 onBeforeUnmount(() => {
   clearInterval(interval);
 });
+
 </script>
 
 <template>
-  <div class="quiz-container">
-    <div class="text-center mb-10">
+  <div class="quiz-container min-h-screen">
+    <div class="text-center mb-10 dark:text-white">
       <div>
         <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
       </div>
 
-      <dev class="text-xl font-semibold mb-8">
+      <div class="text-xl font-semibold mb-8">
         Remaining time
-        <span class="text-primary font-bold text-2xl"
-          >({{ timeLeft.toFixed(2) }})</span
-        >
+        <span class="text-primary font-bold text-2xl dark:text-blue-500">
+          ({{ Math.floor(timeLeft) }}.{{
+            Math.round((timeLeft - Math.floor(timeLeft)) * 100)
+              .toString()
+              .padStart(2, "0")
+          }}
+          )
+        </span>
         Minute
-      </dev>
+      </div>
     </div>
 
-    <div v-if="!quizStarted" class="text-center">
+    <!-- Show 'Go Start' button when time is ended -->
+    <div v-if="!quizStarted && timeEnded" class="text-center">
+      <button @click="router.push({ name: 'home' })" class="btn-start">
+        Go Start
+      </button>
+    </div>
+
+    <!-- Show 'Start Exam' button when quiz hasn't started and time is still available -->
+    <div v-if="!quizStarted && !timeEnded" class="text-center">
       <button @click="handleStart" class="btn-start">Start Exam</button>
     </div>
+
     <div v-if="quizStarted">
       <div v-if="currentQuestion" class="question-container">
-        <h3
-          class="text-lg font-semibold text-center border p-3 rounded-xl bg-primary text-white"
-        >
+        <h3 class="text-lg font-semibold text-center border p-3 rounded-xl mb-5 bg-primary text-white">
           {{ currentQuestion.question_text }}
         </h3>
-        <div
-          v-for="(option, key) in currentQuestion.options"
-          :key="key"
-          class="option"
-          :class="{ selected: selectedOption === key }"
-        >
-          <input
-            type="radio"
-            :id="'option-' + key"
-            v-model="selectedOption"
-            :value="key"
-          />
+        <div v-for="(option, key) in currentQuestion.options" :key="key" class="option dark:text-gray-300"
+          :class="{ selected: selectedOption === key }" @click="selectedOption = key">
+          <input type="radio" :id="'option-' + key" v-model="selectedOption" :value="key"
+            style="opacity: 0; position: absolute" />
           <label :for="'option-' + key">{{ option }}</label>
         </div>
       </div>
       <button @click="previousQuestion" class="btn-prev">Previous</button>
-      <button
-        @click="nextQuestion"
-        :disabled="!selectedOption"
-        class="btn-next"
-      >
-        {{ isLastQuestion ? "Finish Exam" : "Next" }}
+      <button v-if="!isLastQuestion" @click="nextQuestion" :disabled="!selectedOption" class="btn-next">
+        next
+      </button>
+      <button v-if="isLastQuestion" @click="submitFinalExam" :disabled="!selectedOption" class="btn-next">
+        <span v-if="isSubmitting"><i class="fa-solid fa-circle-notch fa-spin-pulse"></i></span>
+        <span v-else>Submit</span>
       </button>
 
       <div class="pagination">
-        <button
-          v-for="(q, index) in questions"
-          :key="index"
-          @click="goToQuestion(index)"
-          :class="{ active: currentQuestionIndex === index }"
-        >
+        <button v-for="(q, index) in questions" :key="index" @click="goToQuestion(index)" :class="{
+          active: currentQuestionIndex === index,
+          answered: studentStore.examAnswers.some(ans => ans.q_id === q.id)
+        }">
           {{ index + 1 }}
         </button>
+      </div>
+
+      <div class="answered-counter text-center mt-3 text-lg font-medium dark:text-white">
+        تم الإجابة على
+        <span class="text-primary font-bold">{{ answeredCount }}</span>
+        من
+        <span class="font-bold">{{ questions.length }}</span>
+        سؤال
       </div>
     </div>
   </div>
@@ -229,16 +252,17 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 10px 50px;
 }
+
 .quiz-container {
   font-family: Arial, sans-serif;
   margin: 20px;
   padding: 10px;
   border-radius: 8px;
-
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
+
 .option {
   display: flex;
   align-items: center;
@@ -263,6 +287,11 @@ onBeforeUnmount(() => {
 .selected {
   background-color: #d3e0ff;
   border-color: #337af5;
+}
+
+.dark .selected {
+  background-color: #2c67ce;
+  color: white;
 }
 
 button {
@@ -294,12 +323,14 @@ button:disabled {
 .btn-prev {
   margin-right: 10px;
 }
+
 .pagination {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   margin-top: 15px;
 }
+
 .pagination button {
   margin: 3px;
   padding: 8px 12px;
@@ -309,9 +340,31 @@ button:disabled {
   cursor: pointer;
   min-width: 40px;
 }
+
 .pagination button.active {
   background-color: #092c67;
   color: white;
   font-weight: bold;
+}
+
+.pagination button.answered {
+  background-color: #e0f0ff;
+  border-color: #4788f8;
+  color: #092c67;
+  font-weight: bold;
+}
+
+.dark .pagination button.answered {
+  background-color: #204b80;
+  color: white;
+}
+
+.answered-counter {
+  margin-top: 15px;
+  color: #092c67;
+}
+
+.dark .answered-counter {
+  color: #ffffff;
 }
 </style>

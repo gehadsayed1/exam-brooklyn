@@ -38,7 +38,7 @@ const SelectedComponent = computed(() => {
 </script>
 
 <template>
-  <div class="login dark:bg-gray-700 min-h-screen">
+  <div class="login dark:bg-gray-900 min-h-screen">
     <div class="grid sm:grid-cols-2 grid-cols-1 p-5 sm:p-0 relative">
       <div class="relative w-[90%] h-[110vh] hidden sm:block">
         <img :src="hero" alt="hero img" class="h-full w-full object-cover" />

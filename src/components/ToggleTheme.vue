@@ -49,7 +49,7 @@ onMounted(() => {
 
 
 .dark .theme-switcher {
-  background-color: #364153;
+  background-color: #405a85;
 }
 
 
