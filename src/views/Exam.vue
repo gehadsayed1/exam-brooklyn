@@ -4,6 +4,7 @@ import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 import { useStudentStore } from "../stores/studentStore";
 import { useRouter } from "vue-router";
+import oops from "../assets/oops.png";
 
 const studentStore = useStudentStore();
 const router = useRouter();
@@ -56,6 +57,7 @@ const startTimer = () => {
     } else {
       clearInterval(interval);
       notyf.error("Time is up! Exam ended.");
+      studentStore.submitExamAnswers();
       router.replace({ name: "home" });
       return;
     }
@@ -180,7 +182,7 @@ onBeforeUnmount(() => {
         <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
       </div>
 
-      <div class="text-xl font-semibold mb-8">
+      <div class="text-xl font-semibold mb-8" v-if="quizStarted && !timeEnded">
         Remaining time
         <span class="text-primary font-bold text-2xl dark:text-blue-500">
           ({{ Math.floor(timeLeft) }}.{{
@@ -196,8 +198,10 @@ onBeforeUnmount(() => {
 
     <!-- Show 'Go Start' button when time is ended -->
     <div v-if="!quizStarted && timeEnded" class="text-center">
+      <img :src="oops" alt="" class="mx-auto">
+      <h2 class="text-2xl font-bold mb-5">When reloading, you must re-register to complete the exam.</h2>
       <button @click="router.push({ name: 'home' })" class="btn-start">
-        Go Start
+        Go to Registration
       </button>
     </div>
 
