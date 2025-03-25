@@ -7,6 +7,7 @@ import {
   STUDENT_ID,
   FINISH_EXAM_API,
   SUBMIT_EXAM_ANSWERS,
+  SEND_OTP_API,
 } from "../api/Api";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
@@ -21,9 +22,11 @@ const notyf = new Notyf({
 
 export const useStudentStore = defineStore("studentStore", () => {
   const studentId = ref("");
+
   const courses = ref([]);
   const router = useRouter();
   const selectedModule = ref("");
+  const errorMessages = ref("");
   const instructors = ref([]);
   const selectedInstructor = ref("");
   const startExam = ref({ questions: [] });
@@ -31,22 +34,50 @@ export const useStudentStore = defineStore("studentStore", () => {
   const error = ref(null);
   const attemptId = ref(null);
   const examAnswers = ref([]);
-
+  const otpMasg = ref("");
+  const masExam = ref("");
+  const loadingOtp = ref(false);
   const storedAttemptId = computed(
     () => attemptId.value || sessionStorage.getItem("attemptId")
   );
 
   const fetchCourses = async () => {
-    if (!studentId.value.trim()) {
-      error.value = "Please enter student ID";
-      return;
-    }
     loading.value = true;
     try {
       const response = await apiClient.get(`${STUDENT_ID}/${studentId.value}`);
       courses.value = response.data;
+      errorMessages.value = "";
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+      if (error.response && error.response.status === 404) {
+        errorMessages.value =
+          error.response?.data?.message || "Something went wrong.";
+      }
     } finally {
       loading.value = false;
+    }
+  };
+
+  const sendOTP = async (studentId) => {
+    try {
+      console.log("studentId", studentId);
+
+      loadingOtp.value = true;
+      const response = await apiClient.post(SEND_OTP_API, {
+        st_num: studentId,
+      });
+      otpMasg.value = response.data.message;
+      console.log(response.data);
+    } catch (err) {
+      console.log(err);
+
+      otpMasg.value = err.response.data.message;
+      loadingOtp.value = false;
+
+      console.error(err);
+    } finally {
+      loadingOtp.value = false;
     }
   };
 
@@ -63,31 +94,37 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  const submitForm = async () => {
+  const submitForm = async (OTP) => {
+    console.log(OTP);
+
     loading.value = true;
     try {
       const payload = {
         ins_id: selectedInstructor.value,
         course_id: selectedModule.value,
         st_num: studentId.value,
+        otp: OTP,
       };
-
       console.log(payload);
 
       const response = await apiClient.post(START_EXAM, payload);
-      console.log(response.data);
-
       startExam.value = response.data;
       attemptId.value = startExam.value.data.attempt_id;
       examAnswers.value = startExam.value.data.answers;
-      console.log(startExam.value.data.answers);
+      error.value = null;
+      masExam.value = "";
       sessionStorage.setItem("attemptId", attemptId.value);
-      notyf.success("Exam started successfully.");
       router.push("/examPage");
     } catch (error) {
-      console.error("Error details:", error);
-      notyf.error("Something went wrong. Please try again.");
-      router.replace({ name: "home" });
+      // console.error("Error details:", error);
+      masExam.value =
+        error.response.data.message ||
+        "Something went wrong. Please try again.";
+      console.log(error.response.data.message);
+      console.log(masExam.value);
+
+      loading.value = false;
+      router.push({ name: "home" });
     } finally {
       loading.value = false;
     }
@@ -118,9 +155,11 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  setInterval(submitExamAnswers, 5000);
+  const interval = setInterval(submitExamAnswers, 3000);
 
   const submitFinalExam = async (payload) => {
+    clearInterval(interval);
+
     try {
       let answers = payload.answers;
 
@@ -157,7 +196,6 @@ export const useStudentStore = defineStore("studentStore", () => {
         notyf.error("Error in closing the exam. Please try again.");
       }
     } catch (error) {
-      notyf.error("Error saving exam progress.");
       console.error("Error:", error.response || error);
     }
   };
@@ -185,5 +223,10 @@ export const useStudentStore = defineStore("studentStore", () => {
     submitForm,
     submitExamAnswers,
     submitFinalExam,
+    errorMessages,
+    sendOTP,
+    otpMasg,
+    masExam,
+    loadingOtp,
   };
 });

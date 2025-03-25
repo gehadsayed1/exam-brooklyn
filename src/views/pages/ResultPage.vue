@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from "vue"; 
-import thank from "../assets/thank.png"; 
+import thank from "../../assets/thank.png"; 
 
 
 const redirectToHome = () => {

@@ -2,9 +2,8 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
-import { useStudentStore } from "../stores/studentStore";
+import { useStudentStore } from "../../stores/studentStore";
 import { useRouter } from "vue-router";
-import oops from "../assets/oops.png";
 
 const studentStore = useStudentStore();
 const router = useRouter();
@@ -15,16 +14,21 @@ const notyf = new Notyf({
   position: { x: "center", y: "top" },
 });
 
+if (!sessionStorage.getItem("attemptId")) {
+  router.push("/home");
+}
+
 const examData = computed(() => studentStore.startExam?.data || {});
 const remainingTime = computed(() => examData.value?.remaining_time || 0);
 const exam = computed(() => examData.value?.exam || {});
 const questions = computed(() => exam.value?.questions || []);
 const previousAnswers = computed(() => examData.value?.answers || []);
+const showUnansweredMessage = ref("");
 
 const answersArray = ref([]);
 const timeLeft = ref(remainingTime.value);
 const currentQuestionIndex = ref(0);
-const selectedOption = ref(null);
+const selectedOptions = ref([]); 
 const quizStarted = ref(false);
 const isSubmitting = ref(false);
 let interval;
@@ -36,14 +40,11 @@ const isLastQuestion = computed(
   () => currentQuestionIndex.value === questions.value.length - 1
 );
 
-const answeredCount = computed(() =>
-  studentStore.examAnswers.length
-);
+const answeredCount = computed(() => studentStore.examAnswers.length);
 
-// Track if time is finished or not
-const timeEnded = computed(() => remainingTime.value <= 0);
+// Track if page was reloaded or not
+const lode = ref(false);
 
-// Start timer
 const startTimer = () => {
   interval = setInterval(() => {
     let integerPart = Math.floor(timeLeft.value);
@@ -57,7 +58,7 @@ const startTimer = () => {
     } else {
       clearInterval(interval);
       notyf.error("Time is up! Exam ended.");
-      studentStore.submitExamAnswers();
+
       router.replace({ name: "home" });
       return;
     }
@@ -66,12 +67,14 @@ const startTimer = () => {
   }, 1000);
 };
 
-// Save answers to session storage
 const saveAnswer = () => {
-  if (selectedOption.value !== null && currentQuestion.value) {
+  if (
+    selectedOptions.value[currentQuestionIndex.value] !== null &&
+    currentQuestion.value
+  ) {
     const answer = {
       q_id: currentQuestion.value.id,
-      selected_option: selectedOption.value,
+      selected_option: selectedOptions.value[currentQuestionIndex.value],
     };
 
     const existingIndex = studentStore.examAnswers.findIndex(
@@ -106,11 +109,13 @@ const loadSelectedOption = () => {
   );
 
   if (modifiedAnswer) {
-    selectedOption.value = modifiedAnswer.selected_option;
+    selectedOptions.value[currentQuestionIndex.value] =
+      modifiedAnswer.selected_option;
   } else if (savedAnswer) {
-    selectedOption.value = savedAnswer.selected_option;
+    selectedOptions.value[currentQuestionIndex.value] =
+      savedAnswer.selected_option;
   } else {
-    selectedOption.value = null;
+    selectedOptions.value[currentQuestionIndex.value] = null;
   }
 };
 
@@ -122,7 +127,10 @@ const handleStart = () => {
 };
 
 const nextQuestion = async () => {
-  if (selectedOption.value !== null && currentQuestion.value) {
+  if (
+    selectedOptions.value[currentQuestionIndex.value] !== null &&
+    currentQuestion.value
+  ) {
     saveAnswer();
     if (!isLastQuestion.value) {
       currentQuestionIndex.value++;
@@ -151,6 +159,30 @@ const goToQuestion = (index) => {
 
 const submitFinalExam = async () => {
   try {
+    const unansweredQuestionIndexes = questions.value.reduce(
+      (acc, question, index) => {
+        if (
+          selectedOptions.value[index] === null ||
+          selectedOptions.value[index] === undefined
+        ) {
+          acc.push(index + 1); 
+        }
+        return acc;
+      },
+      []
+    );
+
+  
+    if (unansweredQuestionIndexes.length > 0) {
+      showUnansweredMessage.value = `Please answer all questions. Unanswered questions: ${unansweredQuestionIndexes.join(
+        ", "
+      )}`;
+      return;
+    } else {
+      showUnansweredMessage.value = ""; 
+    }
+
+   
     saveAnswer();
     const payload = { answers: answersArray.value };
     isSubmitting.value = true;
@@ -163,16 +195,21 @@ const submitFinalExam = async () => {
   }
 };
 
+// Handle before unload
+const handleBeforeUnload = (e) => {
+  e.preventDefault();
+  sessionStorage.removeItem("attemptId");
+  sessionStorage.removeItem("answers");
+  return "";
+};
+
 onMounted(() => {
-  if (remainingTime.value > 0) {
-    startTimer();
-  }
+  window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
-  clearInterval(interval);
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
-
 </script>
 
 <template>
@@ -182,13 +219,13 @@ onBeforeUnmount(() => {
         <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
       </div>
 
-      <div class="text-xl font-semibold mb-8" v-if="quizStarted && !timeEnded">
+      <div class="text-xl font-semibold mb-8">
         Remaining time
         <span class="text-primary font-bold text-2xl dark:text-blue-500">
           ({{ Math.floor(timeLeft) }}.{{
-            Math.round((timeLeft - Math.floor(timeLeft)) * 100)
-              .toString()
-              .padStart(2, "0")
+          Math.round((timeLeft - Math.floor(timeLeft)) * 100)
+          .toString()
+          .padStart(2, "0")
           }}
           )
         </span>
@@ -196,17 +233,8 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Show 'Go Start' button when time is ended -->
-    <div v-if="!quizStarted && timeEnded" class="text-center">
-      <img :src="oops" alt="" class="mx-auto">
-      <h2 class="text-2xl font-bold mb-5">When reloading, you must re-register to complete the exam.</h2>
-      <button @click="router.push({ name: 'home' })" class="btn-start">
-        Go to Registration
-      </button>
-    </div>
-
-    <!-- Show 'Start Exam' button when quiz hasn't started and time is still available -->
-    <div v-if="!quizStarted && !timeEnded" class="text-center">
+    <!-- Show 'Start Exam' button initially -->
+    <div v-if="!quizStarted" class="text-center">
       <button @click="handleStart" class="btn-start">Start Exam</button>
     </div>
 
@@ -216,37 +244,47 @@ onBeforeUnmount(() => {
           {{ currentQuestion.question_text }}
         </h3>
         <div v-for="(option, key) in currentQuestion.options" :key="key" class="option dark:text-gray-300"
-          :class="{ selected: selectedOption === key }" @click="selectedOption = key">
-          <input type="radio" :id="'option-' + key" v-model="selectedOption" :value="key"
+          :class="{ selected: selectedOptions[currentQuestionIndex] === key }"
+          @click="selectedOptions[currentQuestionIndex] = key">
+          <input type="radio" :id="'option-' + key" v-model="selectedOptions[currentQuestionIndex]" :value="key"
             style="opacity: 0; position: absolute" />
           <label :for="'option-' + key">{{ option }}</label>
         </div>
       </div>
-      <button @click="previousQuestion" class="btn-prev">Previous</button>
-      <button v-if="!isLastQuestion" @click="nextQuestion" :disabled="!selectedOption" class="btn-next">
-        next
-      </button>
-      <button v-if="isLastQuestion" @click="submitFinalExam" :disabled="!selectedOption" class="btn-next">
-        <span v-if="isSubmitting"><i class="fa-solid fa-circle-notch fa-spin-pulse"></i></span>
-        <span v-else>Submit</span>
-      </button>
+
+      <div class="text-center">
+        <button @click="previousQuestion" class="btn-prev">Previous</button>
+        <button v-if="!isLastQuestion" @click="nextQuestion" :disabled="!selectedOptions[currentQuestionIndex]"
+          class="btn-next">
+          next
+        </button>
+        <button v-if="isLastQuestion" @click="submitFinalExam" :disabled="!selectedOptions[currentQuestionIndex]"
+          class="btn-next">
+          <span v-if="isSubmitting"><i class="fa-solid fa-circle-notch fa-spin-pulse"></i></span>
+          <span v-else>Submit</span>
+        </button>
+      </div>
 
       <div class="pagination">
         <button v-for="(q, index) in questions" :key="index" @click="goToQuestion(index)" :class="{
-          active: currentQuestionIndex === index,
-          answered: studentStore.examAnswers.some(ans => ans.q_id === q.id)
-        }">
+            active: currentQuestionIndex === index,
+            answered: studentStore.examAnswers.some((ans) => ans.q_id === q.id),
+          }">
           {{ index + 1 }}
         </button>
       </div>
 
       <div class="answered-counter text-center mt-3 text-lg font-medium dark:text-white">
-        تم الإجابة على
-        <span class="text-primary font-bold">{{ answeredCount }}</span>
-        من
-        <span class="font-bold">{{ questions.length }}</span>
-        سؤال
+        It has been answered
+        <span class="text-primary dark:text-blue-500 text-xl font-bold">({{ answeredCount }})</span>
+        from
+        <span class="text-primary font-bold text-xl dark:text-blue-500">({{ questions.length }})</span>
+        Questions
       </div>
+    </div>
+
+    <div v-if="showUnansweredMessage" class="alert-message text-red-500 text-center mt-3">
+      {{ showUnansweredMessage }}
     </div>
   </div>
 </template>
@@ -365,7 +403,7 @@ button:disabled {
 
 .answered-counter {
   margin-top: 15px;
-  color: #092c67;
+  color: #0d47aa;
 }
 
 .dark .answered-counter {

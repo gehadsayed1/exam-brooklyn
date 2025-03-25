@@ -1,5 +1,5 @@
 <script setup>
-import logo from "../assets/logo.png"
+import logo from "../../assets/logo.png"
 import Toggle from "./ToggleTheme.vue"
 
 </script>
