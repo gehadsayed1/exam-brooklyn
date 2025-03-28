@@ -35,8 +35,12 @@ export const useStudentStore = defineStore("studentStore", () => {
   const attemptId = ref(null);
   const examAnswers = ref([]);
   const otpMasg = ref("");
-  const masExam = ref("");
   const loadingOtp = ref(false);
+  const otpMessageColor = ref("#000000");
+  const otpSent = ref(false);
+  const studentOTP = ref("");
+  const timer = ref(120);
+  let startTimer = null;
   const storedAttemptId = computed(
     () => attemptId.value || sessionStorage.getItem("attemptId")
   );
@@ -46,6 +50,7 @@ export const useStudentStore = defineStore("studentStore", () => {
     try {
       const response = await apiClient.get(`${STUDENT_ID}/${studentId.value}`);
       courses.value = response.data;
+      otpSent.value = true;
       errorMessages.value = "";
       console.log(response.data);
     } catch (error) {
@@ -56,28 +61,69 @@ export const useStudentStore = defineStore("studentStore", () => {
       }
     } finally {
       loading.value = false;
+      otpSent.value = false;
+    }
+  };
+  const startCountdown = () => {
+    if (startTimer) {
+      clearInterval(startTimer);
+    }
+
+    if (otpMasg.value === "OTP sent to your email") {
+      timer.value = 120;
+      startTimer = setInterval(() => {
+        if (timer.value > 0) {
+          timer.value--;
+        } else if (timer.value === 0) {
+          clearInterval(startTimer);
+          timer.value = 120;
+          otpMasg.value = "OTP is expired.";
+          otpMessageColor.value = "text-red-500";
+        }
+      }, 1000);
+    } else {
+      console.log("OTP not sent yet, countdown not started");
     }
   };
 
   const sendOTP = async (studentId) => {
     try {
+      otpMasg.value = "";
+
       console.log("studentId", studentId);
 
       loadingOtp.value = true;
       const response = await apiClient.post(SEND_OTP_API, {
         st_num: studentId,
       });
-      otpMasg.value = response.data.message;
+      otpSent.value = true;
+      if (response.data && response.data.message) {
+        otpMasg.value = response.data.message || "OTP sent to your email";
+        otpMessageColor.value = "text-green-500";
+        startCountdown();
+      }
+
       console.log(response.data);
     } catch (err) {
       console.log(err);
 
-      otpMasg.value = err.response.data.message;
-      loadingOtp.value = false;
+      if (err.response) {
+        otpMasg.value =
+          err.response.data.message || "Error occurred while sending OTP.";
+        otpMessageColor.value = "text-red-500";
+      } else if (err.request) {
+        otpMasg.value = "Network error. Please check your connection.";
+        otpMessageColor.value = "text-red-500";
+      } else {
+        otpMasg.value = "An unexpected error occurred.";
+        otpMessageColor.value = "text-red-500";
+      }
 
+      loadingOtp.value = false;
       console.error(err);
     } finally {
       loadingOtp.value = false;
+      otpSent.value = false;
     }
   };
 
@@ -94,39 +140,54 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  const submitForm = async (OTP) => {
-    console.log(OTP);
+  const submitForm = async () => {
+ 
 
     loading.value = true;
+
     try {
       const payload = {
         ins_id: selectedInstructor.value,
         course_id: selectedModule.value,
         st_num: studentId.value,
-        otp: OTP,
+        otp: studentOTP.value,
       };
       console.log(payload);
 
       const response = await apiClient.post(START_EXAM, payload);
+      clearInterval(startTimer);
       startExam.value = response.data;
       attemptId.value = startExam.value.data.attempt_id;
       examAnswers.value = startExam.value.data.answers;
       error.value = null;
       masExam.value = "";
       sessionStorage.setItem("attemptId", attemptId.value);
-      router.push("/examPage");
+      studentId.value = "";
+      selectedModule.value = null;
+      selectedInstructor.value = null;
+      studentOTP.value = "";
+      otpMasg.value = "";
+      errorMessages.value = "";
+      router.push({ name: "examPage" });
     } catch (error) {
-      // console.error("Error details:", error);
-      masExam.value =
-        error.response.data.message ||
-        "Something went wrong. Please try again.";
-      console.log(error.response.data.message);
-      console.log(masExam.value);
+      console.log(error);
 
+      if (error.response.data.message === "Invalid OTP") {
+        studentOTP.value = "";
+        otpMasg.value = "Invalid OTP. Please try again.";
+        otpMessageColor.value = "text-red-500";
+        timer.value = 120;
+        clearInterval(startTimer);
+      }
+      if (error.response.data.message === "Student not found") {
+        errorMessages.value = "ID is not found. Please try again."; 
+        studentOTP.value = "";
+      }
       loading.value = false;
       router.push({ name: "home" });
     } finally {
       loading.value = false;
+      errorMessages.value = "";
     }
   };
 
@@ -224,9 +285,13 @@ export const useStudentStore = defineStore("studentStore", () => {
     submitExamAnswers,
     submitFinalExam,
     errorMessages,
+    otpMessageColor,
+    otpSent,
+    studentOTP,
     sendOTP,
     otpMasg,
-    masExam,
+    startCountdown,
+    timer,
     loadingOtp,
   };
 });

@@ -35,12 +35,13 @@ const schema = yup.object().shape({
 });
 
 function showLogin() {
-  prism.value.style.transform = "translateZ(-100px)";
+  prism.value.style.transform = "rotateY(0deg)";
 }
 
 function showForgotPassword() {
-  prism.value.style.transform = "translateZ(-100px) rotateY(-180deg)";
+  prism.value.style.transform = "rotateY(180deg)";
 }
+
 
 async function handleLogin() {
   errors.value = { email: "", password: "" };
@@ -152,7 +153,7 @@ async function handleForgotPassword() {
 
       <!-- Forgot Password -->
       <div
-        class="face face-back dark:bg-gray-600 shadow-xl shadow-blue-500 bg-white"
+        class="face face-back dark:bg-gray-600 shadow shadow-blue-500 bg-white"
       >
         <div class="content">
           <div class="flex justify-between items-center mb-8">
@@ -222,7 +223,7 @@ body {
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.6s ease-in-out;
-  transform: translateZ(-140px);
+  transform: rotateY(0deg)
 }
 
 .face {
@@ -235,12 +236,12 @@ body {
   backface-visibility: hidden;
 }
 
-.face-front {
-  transform: rotateY(0deg) translateZ(140px);
-}
 
 .face-back {
-  transform: rotateY(180deg) translateZ(140px);
+  transform: rotateY(0deg); /* front */
+}
+.face-back {
+  transform: rotateY(180deg);
 }
 
 .field-wrapper {

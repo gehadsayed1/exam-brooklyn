@@ -1,13 +1,24 @@
 <script setup>
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { useStudentStore } from "../../stores/studentStore";
 import { IdCard, UserRound } from "lucide-vue-next";
 
 const studentStore = useStudentStore();
 
 let timeout = null;
-const studentOTP = ref("");
-const errorLoc = ref(false);
+
+
+
+
+
+
+
+
+const handelSendOtp = () => {
+  if (studentStore.studentId) {
+    studentStore.sendOTP(studentStore.studentId);
+  }
+};
 
 watch(
   () => studentStore.studentId,
@@ -34,23 +45,29 @@ watch(
 );
 
 const submitForm = async () => {
-  if (studentOTP.value === "") {
-    errorLoc.value = true;
-    return;
-  }
+  
+  if (studentStore.studentOTP === "") {
+      studentStore.otpMasg = "OTP is required.";
+      studentStore.otpMessageColor = "text-red-500";
+      studentStore.loading = false;
+      return;
+    } else if (studentStore.studentOTP.length < 6) {
+      studentStore.otpMasg= "OTP must be at least 6 digits.";
+      studentStore.otpMessageColor.value = "text-red-500";
+      studentStore.loading = false;
+      return;
+    } else {
+      studentStore.otpMasg = "";
+    }
 
-  await studentStore.submitForm(studentOTP.value);
-
-  if (studentStore.error === null) {
-    // Empty the form after successful submission
-    studentStore.studentId = "";
-    studentStore.selectedModule = null;
-    studentStore.selectedInstructor = null;
-    studentStore.studentOTP = "";
-    studentStore.otpMasg = "";
-  }
+  await studentStore.submitForm();
+ 
 };
+
+console.log(studentStore.studentOTP);
+
 </script>
+
 
 <template>
   <div
@@ -84,6 +101,7 @@ const submitForm = async () => {
           />
           <input
             v-model="studentStore.studentId"
+            :disabled="studentStore.otpSent || studentStore.studentId !== '' "
             type="text"
             id="name-input"
             placeholder="Enter Your ID"
@@ -91,49 +109,50 @@ const submitForm = async () => {
           />
         </div>
       </div>
+      <p v-if="studentStore.errorMessages" class="text-red-600">
+        {{ studentStore.errorMessages }}
+      </p>
       <div class="mb-5 relative">
         <div class="flex justify-center">
           <button
-            @click="studentStore.sendOTP(studentStore.studentId)"
-            :disabled="!studentStore.studentId"
-            :class="{
-              'opacity-50 cursor-not-allowed hover:bg-primary':
-                !studentStore.studentId || studentStore.errorMessages,
-            }"
-            class="text-white font-semibold py-2 px-4 rounded-2xl cursor-pointer hover:bg-blue-700 bg-primary w-[200px]"
+            @click="handelSendOtp"
+            :disabled=" studentStore.timer < 120 && studentStore.timer > 0  || studentStore.otpSent || studentStore.studentId === '' "
+            class="text-primary absolute top-4 z-10 right-3 cursor-pointer"
           >
             <span v-if="studentStore.loadingOtp"
               ><i class="fa-solid fa-circle-notch fa-spin-pulse"></i
             ></span>
-            <span v-else> Get Your OTP</span>
+            <span v-else   :class="{
+              'opacity-50 cursor-not-allowed ':
+              studentStore.timer < 120 && studentStore.timer > 0 || studentStore.otpSent || studentStore.studentId === '',
+            }" class="relative text-sm font-bold border-b-1 "> Send OTP</span>
           </button>
         </div>
-        <p class="text-green-500 text-sm mt-1">{{ studentStore.otpMasg }}</p>
 
         <div class="relative">
+          <!-- OTP Input -->
           <input
-            type="text"
-            v-show="studentStore.otpMasg"
-            v-model="studentOTP"
-            id="name-input"
-            placeholder="Enter Your OTP"
-            class="bg-gray-50 border border-gray-300 mt-3 w-full text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          />
+  type="text"
+  v-model="studentStore.studentOTP"
+  :placeholder="`It will be sent after ${studentStore.timer} seconds`"
+  :disabled="studentStore.otpSent || studentStore.studentId === '' || studentStore.timer === 120 || studentStore.timer === 0"
+  class="bg-gray-50 border border-gray-300 mt-3 w-full text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+/>
+
         </div>
+        <p :class="studentStore.otpMessageColor" class="mt-2">
+          {{ studentStore.otpMasg }}
+        </p>
+
       </div>
 
-      <p class="text-red-500 text-sm mb-1" v-if="errorLoc">
-        OTP required. Please check your email or try again.
-      </p>
-      <div
-        class="mb-5"
-        v-if="studentStore.otpMasg !== '' && studentStore.courses.data"
-      >
+      <div class="mb-5" v-if="studentStore.courses.data">
         <label
           for="module-select"
           class="block dark:text-gray-300 text-sm font-medium text-gray-900"
-          >Module Name:</label
         >
+          Module Name:
+        </label>
         <select
           v-model="studentStore.selectedModule"
           id="module-select"
@@ -184,12 +203,6 @@ const submitForm = async () => {
         <span v-if="studentStore.loading" class="loader"></span>
         <span v-else>Submit</span>
       </button>
-
-      <p v-if="studentStore.loading" class="text-blue-600 mt-2">Loading...</p>
-      <p v-if="studentStore.error || studentStore.masExam" class="text-red-600">
-        {{ studentStore.error || studentStore.masExam }}
-      </p>
-      <!-- <p v-if="studentStore.errorMessages" class="text-red-600">{{ studentStore.errorMessages }}</p> -->
     </div>
   </div>
 </template>

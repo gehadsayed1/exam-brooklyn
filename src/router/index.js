@@ -8,6 +8,7 @@ const routes = [
   { path: '/home', name: 'home', component: Home },
   { path: '/examPage', name: 'examPage', component: Exam },
   { path: '/result', name: 'ResultPage', component: () => import('../views/pages/ResultPage.vue') },
+  { path: '/systems', name: 'SystemsPage', component: () => import('../views/dashboard/SystemsPage.vue') },
 ];
 
 const router = createRouter({

@@ -41,7 +41,7 @@ console.log(response);
       Cookies.set("user", JSON.stringify(user.value), { expires: 7 });
 
       notyf.success("Logged in successfully");
-      router.push("/home"); 
+      router.push("/systems"); 
     } catch (err) {
       console.error(err);
       error.value = err.response?.data?.message || "Login failed";
