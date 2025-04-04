@@ -23,6 +23,7 @@
   <script setup>
   import { RouterLink } from 'vue-router';
    import onetask from "../../assets/exam.png"
+   import dashboard from "../../assets/dashboard.png"
   
   const systems = [
     {
@@ -40,7 +41,12 @@
       link: "https://smr-system.example.com",
       image: "https://cdn-icons-png.flaticon.com/512/2541/2541988.png"
     },
-    // Add more systems as needed
+    {
+      name: "Dashboard",
+      link: "/dashboard",
+      image: dashboard
+    },
+  
   ];
   </script>
   

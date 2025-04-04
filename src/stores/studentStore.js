@@ -141,8 +141,6 @@ export const useStudentStore = defineStore("studentStore", () => {
   };
 
   const submitForm = async () => {
- 
-
     loading.value = true;
 
     try {
@@ -155,33 +153,42 @@ export const useStudentStore = defineStore("studentStore", () => {
       console.log(payload);
 
       const response = await apiClient.post(START_EXAM, payload);
-      clearInterval(startTimer);
-      startExam.value = response.data;
-      attemptId.value = startExam.value.data.attempt_id;
-      examAnswers.value = startExam.value.data.answers;
-      error.value = null;
-      masExam.value = "";
-      sessionStorage.setItem("attemptId", attemptId.value);
-      studentId.value = "";
-      selectedModule.value = null;
-      selectedInstructor.value = null;
-      studentOTP.value = "";
-      otpMasg.value = "";
-      errorMessages.value = "";
-      router.push({ name: "examPage" });
-    } catch (error) {
-      console.log(error);
 
-      if (error.response.data.message === "Invalid OTP") {
-        studentOTP.value = "";
-        otpMasg.value = "Invalid OTP. Please try again.";
-        otpMessageColor.value = "text-red-500";
-        timer.value = 120;
+      if (response && response.data && response.data.data) {
         clearInterval(startTimer);
-      }
-      if (error.response.data.message === "Student not found") {
-        errorMessages.value = "ID is not found. Please try again."; 
+        startExam.value = response.data;
+        attemptId.value = startExam.value.data.attempt_id;
+        examAnswers.value = startExam.value.data.answers;
+        error.value = null;
+        sessionStorage.setItem("attemptId", attemptId.value);
+        studentId.value = "";
+        selectedModule.value = null;
+        selectedInstructor.value = null;
         studentOTP.value = "";
+        otpMasg.value = "";
+        errorMessages.value = "";
+        router.push({ name: "examPage" });
+      } else {
+        console.error("الاستجابة غير متوقعة من السيرفر:", response);
+      }
+    } catch (error) {
+      console.error(error);
+
+      
+      if (error.response && error.response.data) {
+        if (error.response.data.message === "OTP expired or not found") {
+          studentOTP.value = "";
+          otpMasg.value = "ُExpired OTP. Please try again.";
+          otpMessageColor.value = "text-red-500";
+          timer.value = 120;
+          clearInterval(startTimer);
+        }
+        if (error.response.data.message === "Student not found") {
+          errorMessages.value = "ID is not found. Please try again.";
+          studentOTP.value = "";
+        }
+      } else {
+        console.error("استجابة الخطأ غير متوقعة", error);
       }
       loading.value = false;
       router.push({ name: "home" });

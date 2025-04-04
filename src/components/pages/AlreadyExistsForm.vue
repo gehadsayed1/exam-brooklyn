@@ -7,13 +7,6 @@ const studentStore = useStudentStore();
 
 let timeout = null;
 
-
-
-
-
-
-
-
 const handelSendOtp = () => {
   if (studentStore.studentId) {
     studentStore.sendOTP(studentStore.studentId);
@@ -45,33 +38,29 @@ watch(
 );
 
 const submitForm = async () => {
-  
   if (studentStore.studentOTP === "") {
-      studentStore.otpMasg = "OTP is required.";
-      studentStore.otpMessageColor = "text-red-500";
-      studentStore.loading = false;
-      return;
-    } else if (studentStore.studentOTP.length < 6) {
-      studentStore.otpMasg= "OTP must be at least 6 digits.";
-      studentStore.otpMessageColor.value = "text-red-500";
-      studentStore.loading = false;
-      return;
-    } else {
-      studentStore.otpMasg = "";
-    }
+    studentStore.otpMasg = "OTP is required.";
+    studentStore.otpMessageColor = "text-red-500";
+    studentStore.loading = false;
+    return;
+  } else if (studentStore.studentOTP.length < 6) {
+    studentStore.otpMasg = "OTP must be at least 6 digits.";
+    studentStore.otpMessageColor.value = "text-red-500";
+    studentStore.loading = false;
+    return;
+  } else {
+    studentStore.otpMasg = "";
+  }
 
   await studentStore.submitForm();
- 
 };
 
 console.log(studentStore.studentOTP);
-
 </script>
-
 
 <template>
   <div
-    class="bg-blue-50 w-[100%] sm:w-[90%] rounded-xl pt-15 pb-5 px-5 relative"
+    class="bg-blue-50 dark:bg-gray-800 w-[100%] sm:w-[90%] rounded-xl pt-15 pb-5 px-5 relative"
   >
     <div
       class="p-10 bg-primary mb-5 w-10 h-10 rounded-full absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-[50%]"
@@ -101,7 +90,7 @@ console.log(studentStore.studentOTP);
           />
           <input
             v-model="studentStore.studentId"
-            :disabled="studentStore.otpSent || studentStore.studentId !== '' "
+            :disabled="studentStore.otpSent || studentStore.studentId !== ''"
             type="text"
             id="name-input"
             placeholder="Enter Your ID"
@@ -116,34 +105,49 @@ console.log(studentStore.studentOTP);
         <div class="flex justify-center">
           <button
             @click="handelSendOtp"
-            :disabled=" studentStore.timer < 120 && studentStore.timer > 0  || studentStore.otpSent || studentStore.studentId === '' "
+            :disabled="
+              (studentStore.timer < 120 && studentStore.timer > 0) ||
+              studentStore.otpSent ||
+              studentStore.studentId === ''
+            "
             class="text-primary absolute top-4 z-10 right-3 cursor-pointer"
           >
             <span v-if="studentStore.loadingOtp"
               ><i class="fa-solid fa-circle-notch fa-spin-pulse"></i
             ></span>
-            <span v-else   :class="{
-              'opacity-50 cursor-not-allowed ':
-              studentStore.timer < 120 && studentStore.timer > 0 || studentStore.otpSent || studentStore.studentId === '',
-            }" class="relative text-sm font-bold border-b-1 "> Send OTP</span>
+            <span
+              v-else
+              :class="{
+                'opacity-50 cursor-not-allowed ':
+                  (studentStore.timer < 120 && studentStore.timer > 0) ||
+                  studentStore.otpSent ||
+                  studentStore.studentId === '',
+              }"
+              class="relative text-sm font-bold border-b-1"
+            >
+              Send OTP</span
+            >
           </button>
         </div>
 
         <div class="relative">
           <!-- OTP Input -->
           <input
-  type="text"
-  v-model="studentStore.studentOTP"
-  :placeholder="`It will be sent after ${studentStore.timer} seconds`"
-  :disabled="studentStore.otpSent || studentStore.studentId === '' || studentStore.timer === 120 || studentStore.timer === 0"
-  class="bg-gray-50 border border-gray-300 mt-3 w-full text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-/>
-
+            type="text"
+            v-model="studentStore.studentOTP"
+            :placeholder="`It will be sent after ${studentStore.timer} seconds`"
+            :disabled="
+              studentStore.otpSent ||
+              studentStore.studentId === '' ||
+              studentStore.timer === 120 ||
+              studentStore.timer === 0
+            "
+            class="bg-gray-50 border border-gray-300 mt-3 w-full text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          />
         </div>
         <p :class="studentStore.otpMessageColor" class="mt-2">
           {{ studentStore.otpMasg }}
         </p>
-
       </div>
 
       <div class="mb-5" v-if="studentStore.courses.data">
@@ -216,9 +220,11 @@ console.log(studentStore.studentOTP);
   outline: none;
   transition: border 0.3s ease;
 }
+
 .input-field:focus {
   border-color: #007bff;
 }
+
 .btn-primary {
   color: white;
   padding: 10px 15px;
@@ -228,9 +234,11 @@ console.log(studentStore.studentOTP);
   width: 100%;
   text-align: center;
 }
+
 .btn-primary:hover {
   background-color: #0056b3;
 }
+
 .loader {
   border: 4px solid #f3f3f3;
   border-radius: 50%;
@@ -244,6 +252,7 @@ console.log(studentStore.studentOTP);
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }

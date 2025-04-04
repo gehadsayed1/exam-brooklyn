@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 import apiClient from "../api/axiosInstance";
-import {LOGIN}  from "../api/Api";
+import { LOGIN } from "../api/Api";
 
 const notyf = new Notyf({
   duration: 5000,
@@ -25,14 +25,14 @@ export const useAuthStore = defineStore("authStore", () => {
   const login = async (email, password) => {
     loading.value = true;
     error.value = null;
-console.log(email, password);
+    console.log(email, password);
 
     try {
       const response = await apiClient.post(LOGIN, {
         email,
         password,
       });
-console.log(response);
+      console.log(response);
 
       token.value = response.data.token;
       user.value = response.data.User;
@@ -41,7 +41,7 @@ console.log(response);
       Cookies.set("user", JSON.stringify(user.value), { expires: 7 });
 
       notyf.success("Logged in successfully");
-      router.push("/systems"); 
+      router.push("/systems");
     } catch (err) {
       console.error(err);
       error.value = err.response?.data?.message || "Login failed";

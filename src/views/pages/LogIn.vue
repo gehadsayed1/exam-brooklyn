@@ -90,7 +90,7 @@ async function handleForgotPassword() {
   </ul>
 
   <div class="wrapper">
-    <div class="rec-prism mb-8" ref="prism">
+    <div class="rec-prism mb-8 " ref="prism">
       <!-- Login -->
       <div
         class="face face-front dark:bg-gray-600 shadow shadow-blue-500 bg-white"

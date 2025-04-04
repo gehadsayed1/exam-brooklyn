@@ -234,8 +234,11 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Show 'Start Exam' button initially -->
-    <div v-if="!quizStarted" class="text-center">
+    <div v-if="!quizStarted && timeLeft > 0" class="text-center">
       <button @click="handleStart" class="btn-start">Start Exam</button>
+    </div>
+    <div v-if="timeLeft <= 0" class="text-center">
+      <button @click="router.push('/home')" class="btn-start">Go Back</button>
     </div>
 
     <div v-if="quizStarted">
