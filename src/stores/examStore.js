@@ -1,8 +1,7 @@
-// 📁 src/stores/examStore.js
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "@/api/axiosInstance";
-import { ALL_EXAMS, ADD_EXAM ,QUESTIONS} from "../api/Api";
+import { ALL_EXAMS, ADD_EXAM, QUESTIONS } from "../api/Api";
 import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 
@@ -17,7 +16,7 @@ export const useExamStore = defineStore("examStore", () => {
   const loading = ref(false);
   const error = ref(null);
   const singleExam = ref(null);
-  const examQuestions = ref([]); // ✅ لتخزين الأسئلة
+  const examQuestions = ref([]);
 
   // ✅ Fetch all exams
   const fetchExams = async () => {
@@ -41,6 +40,7 @@ export const useExamStore = defineStore("examStore", () => {
     error.value = null;
     try {
       const response = await apiClient.post(ADD_EXAM, examData);
+      notyf.success("Exam created successfully");
       exams.value.push(response.data);
     } catch (err) {
       error.value = "Failed to create exam";
@@ -52,13 +52,10 @@ export const useExamStore = defineStore("examStore", () => {
   };
 
   // ✅ Update exam
-  const updateExam = async (id, updatedData) => {
+  const updateExam = async (updatedData) => {
+    console.log(updatedData);
     try {
-    const response =  await apiClient.put(`${ALL_EXAMS}/${id}`, updatedData);
-
-    console.log(response.data);
-    
-
+      const response = await apiClient.post(ALL_EXAMS, updatedData);
       notyf.success("Exam updated successfully");
     } catch (err) {
       console.error(err);
@@ -98,66 +95,65 @@ export const useExamStore = defineStore("examStore", () => {
   const fetchExamQuestions = async (examId) => {
     try {
       const response = await apiClient.get(`${ALL_EXAMS}/${examId}/questions`);
-      examQuestions.value = response.data.data; 
+      console.log(response);
+      
+      examQuestions.value = response.data.data;
     } catch (err) {
       notyf.error("Failed to fetch questions");
       console.error(err);
     }
   };
-  
+
+  // ✅ Update question
   const updateQuestion = async (questionId, updatedData) => {
     try {
-     const response = await apiClient.put(`${QUESTIONS}/${questionId}`, updatedData)
-     console.log(response.data);
-     
-      notyf.success("Question updated successfully")
+      const response = await apiClient.put(`${QUESTIONS}/${questionId}`, updatedData);
+      notyf.success("Question updated successfully");
     } catch (err) {
-      console.error(err)
-      notyf.error("Failed to update question")
+      console.error(err);
+      notyf.error("Failed to update question");
     }
-  }
-  
+  };
+
+  // ✅ Delete question
   const deleteQuestion = async (questionId) => {
     try {
-      await apiClient.delete(`${QUESTIONS}/${questionId}`)
-      notyf.success("Question deleted successfully")
+      await apiClient.delete(`${QUESTIONS}/${questionId}`);
     } catch (err) {
-      console.error(err)
-      notyf.error("Failed to delete question")
+      console.error(err);
     }
-  }
+  };
 
+  // ✅ Bulk create questions
   const bulkCreateQuestions = async (examId, questionsArray) => {
     try {
       await apiClient.post(`${ALL_EXAMS}/${examId}/questions`, {
         questions: questionsArray
-      })
-      notyf.success("Questions added successfully")
+      });
+      notyf.success("Questions added successfully");
     } catch (err) {
-      console.error(err)
-      notyf.error("Failed to add questions")
+      console.error(err);
+      notyf.error("Failed to add questions");
     }
-   
-    
-  }
+  };
+
+  // ✅ Add new questions
   const addNewQuestions = async ({ exam_id, questions }) => {
     try {
-      await apiClient.post(`${ALL_EXAMS}/${exam_id}/questions`, {
-        questions
-      });
+      await apiClient.post(`${ALL_EXAMS}/${exam_id}/questions`, { questions });
       notyf.success("Questions added successfully");
     } catch (err) {
       console.error(err);
       notyf.error("Failed to add new questions");
     }
   };
-  
+
   return {
     exams,
     loading,
     error,
     singleExam,
-    examQuestions, 
+    examQuestions,
     addNewQuestions,
     fetchExams,
     addExam,
@@ -168,6 +164,5 @@ export const useExamStore = defineStore("examStore", () => {
     fetchExamQuestions,
     deleteQuestion,
     bulkCreateQuestions
-    
   };
 });

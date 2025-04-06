@@ -40,7 +40,7 @@
           :key="child.name"
           class="p-2 cursor-pointer font-semibold text-gray-600"
           :class="{
-            'text-indigo-600 bg-indigo-50': route.name === child.route,
+            'text-indigo-600 ': route.name === child.route,
           }"
           @click="router.push({ name: child.route })"
         >

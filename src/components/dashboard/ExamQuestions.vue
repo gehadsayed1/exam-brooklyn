@@ -73,20 +73,11 @@
         </p>
       </div>
     </div>
-
-    <div class="flex justify-between items-center">
-      <button
-        @click="addQuestion"
-        class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
-      >
-        + Add Question
-      </button>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, defineExpose } from 'vue'
 
 const props = defineProps({
   questions: Array
@@ -137,4 +128,7 @@ const removeQuestion = (index) => {
   emit('update:questions', updated)
   if (currentQuestionIndex.value > 0) currentQuestionIndex.value--
 }
+
+// expose the addQuestion method
+defineExpose({ addQuestion })
 </script>

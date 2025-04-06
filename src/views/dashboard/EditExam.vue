@@ -20,17 +20,13 @@
         <button
           @click="updateExam"
           :disabled="!hasChanges || submitting"
-          :class="[
-            'px-6 py-2 rounded flex items-center cursor-pointer justify-center min-w-[140px] transition-all duration-300',
+          :class="[ 'px-6 py-2 rounded flex items-center cursor-pointer justify-center min-w-[140px] transition-all duration-300',
             (!hasChanges || submitting)
               ? 'bg-gray-400 cursor-not-allowed text-white'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           ]"
         >
-          <span
-            v-if="submitting"
-            class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 mr-2"
-          ></span>
+          <span v-if="submitting" class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 mr-2"></span>
           Save Changes
         </button>
       </div>
@@ -47,7 +43,7 @@
         </button>
 
         <button
-          @click="showAdder = true"
+          @click="handleAddQuestion"
           class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 min-w-[140px]"
         >
           + Add Question
@@ -64,6 +60,7 @@
       <!-- Add New Questions -->
       <ExamQuestions
         v-if="showAdder"
+        ref="examQuestionsRef"
         :questions="exam.questions"
         @update:questions="handleQuestionsUpdate"
       />
@@ -74,10 +71,7 @@
           @click="submitNewQuestions"
           class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 flex items-center gap-2 min-w-[140px]"
         >
-          <span
-            v-if="submittingNewQuestions"
-            class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"
-          ></span>
+          <span v-if="submittingNewQuestions" class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
           <span v-else>Submit New Questions</span>
         </button>
       </div>
@@ -86,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import { useExamStore } from "../../stores/examStore";
 import InstructorSelect from "@/components/dashboard/InstructorSelect.vue";
@@ -105,6 +99,7 @@ const submitting = ref(false);
 const submittingNewQuestions = ref(false);
 const showEditor = ref(false);
 const showAdder = ref(false);
+const examQuestionsRef = ref(null)
 
 const exam = ref({
   name: "",
@@ -233,4 +228,11 @@ const submitNewQuestions = async () => {
     submittingNewQuestions.value = false;
   }
 };
+
+const handleAddQuestion = () => {
+  showAdder.value = true
+  nextTick(() => {
+    examQuestionsRef.value?.addQuestion()
+  })
+}
 </script>
