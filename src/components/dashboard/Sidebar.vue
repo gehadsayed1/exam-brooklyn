@@ -2,14 +2,14 @@
     <transition name="slide">
       <aside
         v-show="shouldShow"
-        class="fixed md:static md:block w-64 h-full bg-white  shadow-lg z-50"
+        class="fixed md:static md:block w-64 min-h-screen bg-white   shadow-lg z-50"
       >
         <div class="p-4 font-bold pb-10 text-xl flex justify-between items-center">
           <h1 class=" font-bold text-primary">Brooklyn</h1>
           <img src="../../assets/logo.png" class="h-10" alt="">
           <button class="md:hidden cursor-pointer text-gray-500" @click="closeSidebar"><CircleX /></button>
         </div>
-        <ul class="space-y-2 ">
+        <ul class="space-y-2  ">
           <SidebarItem v-for="item in items" :key="item.name" :item="item" />
         </ul>
       </aside>

@@ -43,7 +43,7 @@
     },
     {
       name: "Dashboard",
-      link: "/dashboard",
+      route: "/dashboard",
       image: dashboard
     },
   

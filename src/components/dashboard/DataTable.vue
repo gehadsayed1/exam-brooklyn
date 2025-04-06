@@ -1,6 +1,9 @@
 <template>
   <div class="w-full overflow-x-auto bg-white rounded-lg shadow-md">
-    <table class="min-w-[600px] w-full divide-y text-center divide-gray-200">
+    <div v-if="loading"  class="flex justify-center items-center py-20">
+              <div class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"></div>
+        </div>
+    <table v-else class="min-w-[600px] w-full divide-y text-center divide-gray-200">
       <thead class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
         <tr>
           <th
@@ -16,11 +19,14 @@
         </tr>
       </thead>
 
+ 
+
       <tbody class="bg-white divide-y divide-gray-200">
         <tr
           v-for="item in items"
           :key="item.id"
           class="hover:bg-gray-50 transition-colors"
+
         >
           <td
             v-for="header in headers"
@@ -46,7 +52,7 @@
           </td>
         </tr>
 
-        <tr v-if="items.length === 0">
+        <tr v-if="items.length === 0 && !loading">
           <td :colspan="headers.length + 1" class="px-6 py-4 text-center text-gray-500">
             No data found.
           </td>
@@ -61,7 +67,9 @@ import { Edit, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   headers: Array,
-  items: Array
+  items: Array,
+  loading: Boolean
+
 })
 
 function getValueByPath(obj, path) {

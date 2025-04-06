@@ -10,10 +10,8 @@
         </button>
       </div>
   
-      <div v-if="courseStore.loading" class="flex justify-center items-center py-20">
-        <div class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"></div>
-      </div>
-      <div v-else>
+      
+      <div>
         <DataTable
           :headers="[
             { label: 'Course Code', key: 'code' },
@@ -22,6 +20,7 @@
           :items="courseStore.courses"
           @edit="editCourse"
           @delete="confirmDelete"
+          :loading="courseStore.loading"
         />
       </div>
   

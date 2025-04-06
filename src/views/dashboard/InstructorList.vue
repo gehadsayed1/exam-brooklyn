@@ -22,6 +22,7 @@
         :items="filteredInstructors"
         @edit="editInstructor"
         @delete="confirmDelete"
+        :loading="instructorStore.loading"
       />
     </div>
 

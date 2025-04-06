@@ -10,4 +10,6 @@
  export const ALL_INSTRUCTORS = "instructors"
  export const ALL_COURSES = "courses"
  export const ALL_EXAMS = "exams"
+ export const ADD_EXAM = "addExam"
+ export const QUESTIONS = "questions"
 

@@ -39,7 +39,13 @@ const routes = [
         path: 'courses',
         name: 'courses',
         component: () => import('../views/dashboard/CourseList.vue')
+      },
+      {
+        path: 'exams/:id/edit',
+        name: 'edit-exam',
+        component: () => import('../views/dashboard/EditExam.vue')
       }
+      
     
     ]
   }
