@@ -53,8 +53,6 @@ export const useExamStore = defineStore("examStore", () => {
 
   // ✅ Update exam
   const updateExam = async (id, updatedData) => {
-    console.log(updatedData);
-    
     try {
     const response =  await apiClient.put(`${ALL_EXAMS}/${id}`, updatedData);
 
@@ -108,9 +106,6 @@ export const useExamStore = defineStore("examStore", () => {
   };
   
   const updateQuestion = async (questionId, updatedData) => {
-    console.log(updatedData);
-    console.log(questionId);
-    
     try {
      const response = await apiClient.put(`${QUESTIONS}/${questionId}`, updatedData)
      console.log(response.data);
