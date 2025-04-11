@@ -3,14 +3,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import apiClient from '../api/axiosInstance'
 import { ALL_COURSES } from '../api/Api'
-import { Notyf } from 'notyf'
-import 'notyf/notyf.min.css'
+import notyf from '../components/global/notyf' // Adjust the path as necessary
 
-const notyf = new Notyf({
-  duration: 4000,
-  dismissible: true,
-  position: { x: 'center', y: 'top' }
-})
+
 
 export const useCourseStore = defineStore('courseStore', () => {
   const courses = ref([])
@@ -35,7 +30,7 @@ export const useCourseStore = defineStore('courseStore', () => {
   const addCourse = async (course) => {
     try {
       const response = await apiClient.post(ALL_COURSES, course)
-      courses.value.push(response.data)
+      courses.value.push(response.data.data)
       notyf.success('Course added successfully')
     } catch (err) {
       error.value = 'Failed to add course'
@@ -43,13 +38,14 @@ export const useCourseStore = defineStore('courseStore', () => {
       console.error(err)
     }
   }
+  
 
   const updateCourse = async (id, updatedData) => {
     try {
       const response = await apiClient.put(`${ALL_COURSES}/${id}`, updatedData)
       const index = courses.value.findIndex(c => c.id === id)
       if (index !== -1) {
-        courses.value.splice(index, 1, response.data)
+        courses.value.splice(index, 1, response.data.data) 
       }
       notyf.success('Course updated successfully')
     } catch (err) {
@@ -58,11 +54,12 @@ export const useCourseStore = defineStore('courseStore', () => {
       console.error(err)
     }
   }
+  
 
   const deleteCourse = async (id) => {
     try {
       await apiClient.delete(`${ALL_COURSES}/${id}`)
-      courses.value = courses.value.filter(c => c.id !== id)
+      courses.value = courses.value.filter(c => c.id !== id) 
       notyf.success('Course deleted successfully')
     } catch (err) {
       if (err.response?.status === 500 && err.response?.data?.message.includes('Integrity constraint')) {
@@ -74,6 +71,7 @@ export const useCourseStore = defineStore('courseStore', () => {
       console.error(err)
     }
   }
+  
 
   return {
     courses,

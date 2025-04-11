@@ -3,13 +3,17 @@
     <div v-if="questions.length">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
-        <div class="flex-1 flex justify-center">
-          <span
-            class="text-white font-bold ms-44 bg-indigo-600 rounded-full flex justify-center items-center w-10 h-10"
+        <div class="flex justify-center items-center space-x-4">
+          <div class="text-center text-lg text-gray-700 font-medium">
+            Number of questions
+          </div>
+          <div
+            class="flex justify-center items-center bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-semibold w-8 h-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-110"
           >
             {{ questions.length }}
-          </span>
+          </div>
         </div>
+
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-600">Go to:</label>
           <select
@@ -35,16 +39,14 @@
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div v-for="opt in ['a', 'b', 'c', 'd']" :key="opt">
-            <label class="text-sm capitalize">Option {{ opt.toUpperCase() }}</label>
-            <input
-              v-model="questions[currentQuestionIndex][`option_${opt}`]"
-              type="text"
-              class="w-full border-1 border-indigo-300 px-3 py-2 rounded-md"
-              @input="setModified(true)"
-            />
-          </div>
+        <div v-for="(opt, index) in ['A', 'B', 'C', 'D']" :key="index">
+          <label class="text-sm capitalize">Option {{ opt }}</label>
+          <input
+            v-model="questions[currentQuestionIndex].options[opt]"
+            type="text"
+            class="w-full border-1 border-indigo-300 px-3 py-2 rounded-md"
+            @input="setModified(true)"
+          />
         </div>
 
         <div class="text-center flex flex-col items-center mt-8">
@@ -65,7 +67,7 @@
         <div class="flex justify-between items-center mt-4">
           <button
             @click="saveQuestion(questions[currentQuestionIndex])"
-            class="text-white flex items-center gap-1 cursor-pointer px-2 py-2 rounded-md"
+            class="text-white flex items-center gap-1 cursor-pointer px-4 py-2 rounded-md"
             :class="{
               'bg-gray-400': !isModified,
               'bg-blue-600 hover:bg-blue-500': isModified,
@@ -76,7 +78,10 @@
               v-if="saving"
               class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"
             ></span>
-            <span v-else><ArrowDownToDot class="w-5 h-5" /> {{ saving ? "saving.." : "Save" }}</span>
+            <span v-else class="flex items-center gap-1"
+              ><ArrowDownToDot class="w-5 h-5 flex" />
+              {{ saving ? "saving.." : "Save" }}</span
+            >
           </button>
 
           <button
@@ -89,94 +94,102 @@
         </div>
       </div>
 
-      <!-- ✅ Pagination.vue component -->
-      <Pagination
-        :currentPage="currentQuestionIndex"
-        :questionsPerPage="1"
-        :totalQuestions="questions.length"
-        :goToPage="goToPage"
+      <SweetAlert2Modal
+        v-if="showDeleteAlertDialog"
+        title="Are you sure?"
+        text="This question will be deleted."
+        icon="warning"
+        @confirm="confirmDelete"
+        @cancel="cancelDelete"
       />
+    </div>
+
+    <div v-else class="text-center text-gray-500 font-bold">
+      There are no questions for this exam yet.
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useExamStore } from '@/stores/examStore';
-import Pagination from '@/components/pages/Pagination.vue';
-import { ArrowDownToDot, Beer } from 'lucide-vue-next';
+import { ref, watch } from "vue";
+import { useExamStore } from "@/stores/examStore";
+import { ArrowDownToDot, Beer } from "lucide-vue-next";
+
+import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
+
 
 const props = defineProps({
   questions: Array,
 });
 
+const showDeleteAlertDialog = ref(false);
 const examStore = useExamStore();
 const currentQuestionIndex = ref(0);
 const saving = ref(false);
-const isModified = ref(false); 
+const isModified = ref(false);
 const originalQuestion = ref({});
 
-// Watch for changes in the current question
 watch(
   () => props.questions[currentQuestionIndex.value],
   () => {
-    isModified.value = true; 
+    isModified.value = true;
   },
   { deep: true }
 );
 
 // Save changes to the current question
 const saveQuestion = async (q) => {
+  if (!q.id) {
+    console.error("Question ID is missing");
+    return;
+  }
+
   saving.value = true;
   try {
     await examStore.updateQuestion(q.id, {
       question_text: q.question_text,
-      option_a: q.option_a,
-      option_b: q.option_b,
-      option_c: q.option_c,
-      option_d: q.option_d,
+      option_a: q.options.A,
+      option_b: q.options.B,
+      option_c: q.options.C,
+      option_d: q.options.D,
       correct_option: q.correct_option,
     });
+
     originalQuestion.value = { ...q };
-    isModified.value = false;  
+    isModified.value = false;
   } catch (e) {
-    console.error(e);
+    console.error("Error while saving question:", e);
   } finally {
     saving.value = false;
   }
 };
 
 // Handle deletion with confirmation
-const deleteQuestion = async (id) => {
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, delete it!",
-  });
+const deleteQuestion = (id) => {
+  showDeleteAlertDialog.value = true;
+};
 
-  if (result.isConfirmed) {
-    try {
-      await examStore.deleteQuestion(id);
-      Swal.fire("Deleted!", "Your question has been deleted.", "success");
-    } catch (e) {
-      console.error(e);
-    }
-  } else {
-    Swal.fire("Cancelled", "Your question is safe", "error");
+// Confirm delete
+const confirmDelete = async () => {
+  showDeleteAlertDialog.value = false;
+  try {
+    await examStore.deleteQuestion(
+      props.questions[currentQuestionIndex.value].id
+    );
+    props.questions.splice(currentQuestionIndex.value, 1);
+    currentQuestionIndex.value = Math.max(0, currentQuestionIndex.value - 1); // Move to the previous question or stay at 0
+  } catch (e) {
+    console.error("Error deleting question:", e);
   }
 };
 
-// Navigate to a specific page in the pagination
-const goToPage = (pageNumber) => {
-  currentQuestionIndex.value = pageNumber;
+// Cancel deletion
+const cancelDelete = () => {
+  showDeleteAlertDialog.value = false;
 };
 
 // Mark the question as modified
 const setModified = (status) => {
-  isModified.value = status;  
+  isModified.value = status;
 };
 </script>

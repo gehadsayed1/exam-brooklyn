@@ -9,16 +9,8 @@ import {
   SUBMIT_EXAM_ANSWERS,
   SEND_OTP_API,
 } from "../api/Api";
-import { Notyf } from "notyf";
-import "notyf/notyf.min.css";
+import notyf from '@/components/global/notyf' 
 import { useRouter } from "vue-router";
-
-const notyf = new Notyf({
-  duration: 5000,
-  dismissible: true,
-  ripple: true,
-  position: { x: "center", y: "top" },
-});
 
 export const useStudentStore = defineStore("studentStore", () => {
   const studentId = ref("");

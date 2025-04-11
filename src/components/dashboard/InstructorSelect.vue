@@ -104,7 +104,7 @@ import { useInstructorStore } from "@/stores/instructorStore";
 import { Eye, Plus } from "lucide-vue-next";
 import { RouterLink } from "vue-router";
 
-// ✅ ربط v-model
+
 const modelValue = defineModel();
 
 const instructorStore = useInstructorStore();

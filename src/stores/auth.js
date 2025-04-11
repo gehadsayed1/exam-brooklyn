@@ -3,16 +3,10 @@ import { ref } from "vue";
 import Cookies from "js-cookie";
 
 import { useRouter } from "vue-router";
-import { Notyf } from "notyf";
-import "notyf/notyf.min.css";
+import notyf from '@/components/global/notyf' 
 import apiClient from "../api/axiosInstance";
 import { LOGIN } from "../api/Api";
 
-const notyf = new Notyf({
-  duration: 5000,
-  dismissible: true,
-  position: { x: "center", y: "top" },
-});
 
 export const useAuthStore = defineStore("authStore", () => {
   const token = ref(null);
@@ -44,7 +38,7 @@ export const useAuthStore = defineStore("authStore", () => {
       router.push("/systems");
     } catch (err) {
       console.error(err);
-      error.value = err.response?.data?.message || "Login failed";
+      error.value = err.response?.data?.message || "Failed to login";
       notyf.error(error.value);
     } finally {
       loading.value = false;

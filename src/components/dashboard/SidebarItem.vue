@@ -33,18 +33,19 @@
       </svg>
     </div>
 
-    <transition name="fade-slide hover:bg-gray-100 ">
-      <ul v-if="open && item.children" class="pl-10 list-disc">
+    <transition name="fade-slide hover:bg-gray-100">
+      <ul v-if="open && item.children" class="pl-10">
         <li
           v-for="child in item.children"
           :key="child.name"
-          class="p-2 cursor-pointer font-semibold text-gray-600"
+          class="p-2 relative cursor-pointer font-semibold text-gray-600"
           :class="{
-            'text-indigo-600 ': route.name === child.route,
+            activ: route.name === child.route,
           }"
           @click="router.push({ name: child.route })"
         >
           {{ child.name }}
+          <span class="list-item absolute top-4 -left-3"></span>
         </li>
       </ul>
     </transition>
@@ -90,3 +91,25 @@ const toggle = () => {
   }
 };
 </script>
+
+<style scoped>
+li .list-item {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+li.activ .list-item {
+  background-color: #624ff6;
+  box-shadow: 0 0 10px #624ff6;
+}
+
+ul {
+  list-style-type: none;
+}
+</style>

@@ -8,9 +8,9 @@ import Toggle from "./ToggleTheme.vue"
 <nav class="bg-[#EEEEEE] dark:bg-gray-700">
  <div class="@container">
   <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
-    <a href="/">
+    <router-link to="/systems" class="flex items-center">
         <img :src="logo" class="h-10" alt="Logo" />
-    </a>
+    </router-link>
     <div  >
       <Toggle/>
     </div>

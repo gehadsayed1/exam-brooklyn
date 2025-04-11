@@ -1,9 +1,116 @@
+<script setup>
+import { ref, computed, watch } from "vue";
+import { Edit, Trash2 } from "lucide-vue-next";
+
+const props = defineProps({
+  headers: Array,
+  items: Array,
+  loading: Boolean,
+});
+
+const search = ref("");
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+// Function to format the created_at or updated_at date
+const formatDate = (date) => {
+  if (!date) return "";
+  const options = { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" };
+  return new Date(date).toLocaleString("en-US", options);
+};
+
+const filteredItems = computed(() => {
+  return props.items.filter(
+    (item) =>
+      item.name && item.name.toLowerCase().includes(search.value.toLowerCase())
+  );
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredItems.value.length / itemsPerPage);
+});
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredItems.value.slice(start, end);
+});
+
+// Get the value by path for dynamic data
+function getValueByPath(obj, path) {
+  if (path === "created_at" || path === "updated_at") {
+    return formatDate(obj[path]);  // Apply formatDate for created_at or updated_at
+  }
+  return (
+    path
+      .split(".")
+      .reduce((o, key) => (o && o[key] !== undefined ? o[key] : ""), obj) || ""
+  );
+}
+
+const goToPreviousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const goToNextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+watch(search, () => {
+  currentPage.value = 1;
+});
+</script>
+
 <template>
   <div class="w-full overflow-x-auto bg-white rounded-lg shadow-md">
-    <div v-if="loading"  class="flex justify-center items-center py-20">
-              <div class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"></div>
+    <div>
+      <div class="flex flex-col p-2 py-6 m-h-screen">
+        <div
+          class="bg-white items-center justify-between w-full flex rounded-full shadow-lg p-2 mb-5 sticky"
+          style="top: 5px"
+        >
+          <div>
+            <div class="p-2 mr-1 rounded-full hover:bg-gray-100 cursor-pointer">
+              <svg
+                class="h-6 w-6 text-gray-500"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Search Input with Blur Effect -->
+          <input
+            class="font-bold uppercase rounded-full w-full py-4 pl-4 text-gray-700 bg-gray-100 leading-tight focus:outline-none focus:shadow-outline lg:text-sm text-xs"
+            type="text"
+            v-model="search"
+            placeholder="Search by name..."
+            :class="{
+              'blur-effect': filteredItems.length === 0 && search.length > 0,
+            }"
+          />
         </div>
-    <table v-else class="min-w-[600px] w-full divide-y text-center divide-gray-200">
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div v-if="loading" class="flex justify-center items-center py-20">
+      <div class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"></div>
+    </div>
+
+    <!-- Table -->
+    <table v-if="!loading" class="min-w-[600px] w-full divide-y text-center divide-gray-200">
       <thead class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
         <tr>
           <th
@@ -19,14 +126,12 @@
         </tr>
       </thead>
 
- 
-
       <tbody class="bg-white divide-y divide-gray-200">
+        <!-- Render data rows -->
         <tr
-          v-for="item in items"
+          v-for="item in paginatedItems"
           :key="item.id"
           class="hover:bg-gray-50 transition-colors"
-
         >
           <td
             v-for="header in headers"
@@ -52,29 +157,48 @@
           </td>
         </tr>
 
-        <tr v-if="items.length === 0 && !loading">
-          <td :colspan="headers.length + 1" class="px-6 py-4 text-center text-gray-500">
+        <!-- No results found for the search -->
+        <tr v-if="filteredItems.length === 0 && search.length > 0">
+          <td
+            :colspan="headers.length + 1"
+            class="px-6 py-4 text-start font-bold text-gray-700"
+          >
+            No results found for "{{ search }}".
+          </td>
+        </tr>
+        <tr v-if="filteredItems.length === 0 && !loading">
+          <td
+            :colspan="headers.length + 1"
+            class="px-6 py-4 text-center font-bold text-gray-600"
+          >
             No data found.
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="flex justify-between p-4" v-if="!loading">
+      <button
+        @click="goToPreviousPage"
+        :disabled="currentPage === 1"
+        class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <div class="flex items-center">
+        <span class="text-sm text-gray-500">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+      </div>
+      <button
+        @click="goToNextPage"
+        :disabled="currentPage === totalPages"
+        class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { Edit, Trash2 } from 'lucide-vue-next'
-
-const props = defineProps({
-  headers: Array,
-  items: Array,
-  loading: Boolean
-
-})
-
-function getValueByPath(obj, path) {
-  return path.split('.').reduce((o, key) => (o && o[key] !== undefined ? o[key] : ''), obj)
-}
-
-const emit = defineEmits(['edit', 'delete'])
-</script>

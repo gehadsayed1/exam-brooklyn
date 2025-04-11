@@ -16,9 +16,13 @@ onMounted(() => {
 })
 </script>
 
+
+
 <template>
-  <div class="overflow-x-auto max-w-3xl mx-auto p-6 bg-white rounded shadow">
+  
+  <div class="overflow-x-auto sm:w-2xl md:w-4xl mx-auto p-6 bg-white rounded shadow">
     <h1 class="text-2xl font-bold text-primary mb-6">All Exams</h1>
+    
     <DataTable
       :headers="[
         { label: 'Exam Name', key: 'name' },
@@ -36,3 +40,4 @@ onMounted(() => {
     />
   </div>
 </template>
+

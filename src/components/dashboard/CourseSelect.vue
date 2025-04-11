@@ -132,12 +132,12 @@ const scholarships = ref([
   { id: 3, name: "Scholarship C" },
 ]);
 
-// تحديث الـ v-model في الأب عند تغيير السليكت
+
 watch(selectedCourse, (val) => {
   modelValue.value = val;
 });
 
-// لما القيمة تجي من الأب تتحدث جوه الكمبوننت
+
 watch(modelValue, (val) => {
   selectedCourse.value = val;
 });
