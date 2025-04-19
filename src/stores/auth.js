@@ -29,10 +29,9 @@ export const useAuthStore = defineStore("authStore", () => {
       console.log(response);
 
       token.value = response.data.token;
-      user.value = response.data.User;
+      user.value = response.data.user;
 
       Cookies.set("token", token.value, { expires: 7 });
-      Cookies.set("user", JSON.stringify(user.value), { expires: 7 });
 
       notyf.success("Logged in successfully");
       router.push("/systems");
@@ -45,12 +44,18 @@ export const useAuthStore = defineStore("authStore", () => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await apiClient.post("logout" , {
+      headers: {
+        Authorization: `Bearer ${token.value}`,
+      },
+    }).then((response) => {
+      notyf.success(response.data.message);
+    });
     token.value = null;
     user.value = null;
     Cookies.remove("token");
-    Cookies.remove("user");
-    router.push({ name: "Login" });
+    router.push({ name: "login" });
   };
 
   const loadUserFromCookies = () => {

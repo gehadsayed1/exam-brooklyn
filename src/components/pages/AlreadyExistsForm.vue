@@ -32,6 +32,7 @@ watch(
   () => studentStore.selectedModule,
   (newModule) => {
     if (newModule) {
+    
       studentStore.fetchInstructors();
     }
   }

@@ -3,15 +3,33 @@ import InstructorSelect from "@/components/dashboard/InstructorSelect.vue";
 import CourseSelect from "@/components/dashboard/CourseSelect.vue";
 import ExamInfoForm from "@/components/dashboard/ExamInfoForm.vue";
 import ExamQuestions from "@/components/dashboard/ExamQuestions.vue";
-import { ref } from "vue";
+import { computed, inject, onMounted, ref } from "vue";
 import { useExamStore } from "@/stores/examStore";
-import { Notyf } from "notyf";
-import "notyf/notyf.min.css";
-import { nextTick } from "vue";
+import { useScholarshipStore } from "@/stores/scholarships";
+import notyf from "@/components/global/Notyf";
 
-const notyf = new Notyf();
 const examStore = useExamStore();
-const examQuestionsRef = ref(null);
+const isAdding = ref(false);
+const emitter = inject("emitter");
+const scholarshipStore = useScholarshipStore();
+
+onMounted(() => {
+  scholarshipStore.fetchScholarships();
+  emitter.on("questions", (questions) => {
+    console.log(questions);
+
+    exam.value.questions = questions;
+  });
+});
+
+const isFormValid = computed(() => {
+  return (
+    exam.value.name &&
+    exam.value.duration > 0 &&
+    exam.value.ins_id &&
+    exam.value.crs_id
+  );
+});
 
 const exam = ref({
   name: "",
@@ -32,10 +50,11 @@ const errors = ref({
   crs_id: "",
 });
 
+console.log(exam.value.ins_id);
+
 const validate = () => {
   errors.value = {
     name: exam.value.name ? "" : "Exam name is required",
-    description: exam.value.description ? "" : "Description is required",
     duration: exam.value.duration > 0 ? "" : "Duration must be greater than 0",
     ins_id: exam.value.ins_id ? "" : "Please select an instructor",
     crs_id: exam.value.crs_id ? "" : "Please select a course",
@@ -44,29 +63,16 @@ const validate = () => {
   return Object.values(errors.value).every((e) => e === "");
 };
 
-const handleAddQuestion = () => {
-  nextTick(() => {
-    examQuestionsRef.value?.addQuestion();
-  });
-};
-
 const submitExam = async () => {
-  if (!validate()) {
-    notyf.error("Please fill in all required fields.");
-    return;
-  }
-
-  submitting.value = true;
-
-console.log(exam.value);
-
   try {
+    console.log(exam.value);
+
     await examStore.addExam(exam.value);
     exam.value = {
       name: "",
       description: "",
       duration: 0,
-      ins_id: "",
+      ins_id: "20",
       crs_id: "",
       is_active: true,
       questions: [],
@@ -85,18 +91,18 @@ console.log(exam.value);
       Create New Exam
     </h1>
     <!-- Instructor and Course Selects -->
-    <div class="flex items-center justify-center gap-5 mt-8">
-      <div>
-        <InstructorSelect v-model="exam.ins_id" />
-        <p v-if="errors.ins_id" class="text-red-500 text-sm ms-5">
-          {{ errors.ins_id }}
-        </p>
-      </div>
-
+    <div class="flex items-center justify-between mt-8">
       <div>
         <CourseSelect v-model="exam.crs_id" />
         <p v-if="errors.crs_id" class="text-red-500 text-sm ms-5">
           {{ errors.crs_id }}
+        </p>
+      </div>
+      <div>
+        <InstructorSelect v-model="exam.ins_id" />
+
+        <p v-if="errors.ins_id" class="text-red-500 text-sm ms-5">
+          {{ errors.ins_id }}
         </p>
       </div>
     </div>
@@ -107,8 +113,9 @@ console.log(exam.value);
     <!-- Add Question Button -->
     <div class="flex justify-end mt-6">
       <button
-        @click="handleAddQuestion"
-        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        v-show="!isAdding"
+        @click="isAdding = true"
+        class="bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 cursor-pointer flex items-center gap-2 min-w-[140px]"
       >
         + Add Question
       </button>
@@ -116,22 +123,26 @@ console.log(exam.value);
 
     <!-- Questions Component -->
     <ExamQuestions
+      v-show="isAdding"
       ref="examQuestionsRef"
+      v-model="exam.questions"
       :questions="exam.questions"
       @update:questions="exam.questions = $event"
     />
 
-    <div class="flex justify-end mt-6">
+    <div class="flex justify-start mt-6">
       <button
         @click="submitExam"
-        :disabled="submitting"
-        class="bg-primary text-white px-6 py-2 cursor-pointer rounded hover:bg-[#063585] flex items-center justify-center min-w-[120px]"
+        :disabled="!isFormValid || submitting"
+        :class="[
+          'px-6 py-2 rounded flex items-center justify-center min-w-[120px]',
+          !isFormValid || submitting
+            ? 'bg-gray-400  text-white'
+            : 'bg-primary text-white hover:bg-[#063585]',
+        ]"
       >
-        <span
-          v-if="submitting"
-          class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 mr-2"
-        ></span>
-        Create Exam
+        <span v-if="submitting" class="loader"></span>
+        <span v-else>Submit</span>
       </button>
     </div>
   </div>

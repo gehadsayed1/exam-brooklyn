@@ -10,6 +10,7 @@ const routes = [
   { path: '/examPage', name: 'examPage', component: Exam },
   { path: '/result', name: 'ResultPage', component: () => import('../views/pages/ResultPage.vue') },
   { path: '/systems', name: 'SystemsPage', component: () => import('../views/dashboard/SystemsPage.vue') },
+  { path: '/:catchAll(.*)', name: 'error', component: () => import('@/views/pages/Error404.vue') },
   // dashboard
   {
     path: '/dashboard',
@@ -18,32 +19,47 @@ const routes = [
       {
         path: '',
         name: 'dashboard-home',
-        component: () => import('../views/dashboard/DashboardHome.vue')
+        component: () => import('@/views/dashboard/DashboardHome.vue')
+      },
+      {
+        path: 'employees',
+        name: 'employees',
+        component: () => import('@/views/dashboard/EmployeeList.vue')
       },
       {
         path: 'create-exam',
         name: 'create-exam',
-        component: () => import('../views/dashboard/CreateExams.vue')
+        component: () => import('@/views/dashboard/CreateExams.vue')
       },
       {
         path: 'exams',
         name: 'exams',
-        component: () => import('../views/dashboard/AllExams.vue')
+        component: () => import('@/views/dashboard/AllExams.vue')
       },
       {
         path: 'instructors',
         name: 'instructors',
-        component: () => import('../views/dashboard/InstructorList.vue')
+        component: () => import('@/views/dashboard/InstructorList.vue')
       },
       {
         path: 'courses',
         name: 'courses',
-        component: () => import('../views/dashboard/CourseList.vue')
+        component: () => import('@/views/dashboard/CourseList.vue')
+      },
+      {
+        path: 'scholarships',
+        name: 'scholarships',
+        component: () => import('@/views/dashboard/ScholarshipList.vue')
       },
       {
         path: 'exams/:id/edit',
         name: 'edit-exam',
-        component: () => import('../views/dashboard/EditExam.vue')
+        component: () => import('@/views/dashboard/EditExam.vue')
+      },
+      {
+        path: 'roles',
+        name: 'roles',
+        component: () => import('@/views/dashboard/RoleList.vue')
       }
       
     

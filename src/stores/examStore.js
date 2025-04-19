@@ -41,13 +41,21 @@ export const useExamStore = defineStore("examStore", () => {
       exams.value.push(response.data);
       router.push({ name: "exams" });
     } catch (err) {
-      error.value = "Failed to create exam";
-      notyf.error(error.value);
+      
+      if (Array.isArray(err)) {
+        err.forEach((e) => {
+          notyf.error(e.message || "Failed to create exam");
+        });
+      } else {
+        error.value = "Failed to create exam";
+        notyf.error(error.value);
+      }
       console.error(err);
     } finally {
       loading.value = false;
     }
   };
+  
 
   // ✅ Update exam
   const updateExam = async ( id, updatedData) => {
@@ -59,6 +67,7 @@ export const useExamStore = defineStore("examStore", () => {
       console.log(response.data);
       examQuestions.value = response.data.data;
       notyf.success("Exam updated successfully");
+      router.push("/exams");
       loading.value = false;
     } catch (err) {
      

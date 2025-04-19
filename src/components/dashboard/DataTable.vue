@@ -1,70 +1,3 @@
-<script setup>
-import { ref, computed, watch } from "vue";
-import { Edit, Trash2 } from "lucide-vue-next";
-
-const props = defineProps({
-  headers: Array,
-  items: Array,
-  loading: Boolean,
-});
-
-const search = ref("");
-const currentPage = ref(1);
-const itemsPerPage = 5;
-
-// Function to format the created_at or updated_at date
-const formatDate = (date) => {
-  if (!date) return "";
-  const options = { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" };
-  return new Date(date).toLocaleString("en-US", options);
-};
-
-const filteredItems = computed(() => {
-  return props.items.filter(
-    (item) =>
-      item.name && item.name.toLowerCase().includes(search.value.toLowerCase())
-  );
-});
-
-const totalPages = computed(() => {
-  return Math.ceil(filteredItems.value.length / itemsPerPage);
-});
-
-const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredItems.value.slice(start, end);
-});
-
-// Get the value by path for dynamic data
-function getValueByPath(obj, path) {
-  if (path === "created_at" || path === "updated_at") {
-    return formatDate(obj[path]);  // Apply formatDate for created_at or updated_at
-  }
-  return (
-    path
-      .split(".")
-      .reduce((o, key) => (o && o[key] !== undefined ? o[key] : ""), obj) || ""
-  );
-}
-
-const goToPreviousPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
-
-const goToNextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-
-watch(search, () => {
-  currentPage.value = 1;
-});
-</script>
-
 <template>
   <div class="w-full overflow-x-auto bg-white rounded-lg shadow-md">
     <div>
@@ -106,12 +39,17 @@ watch(search, () => {
 
     <!-- Loading Spinner -->
     <div v-if="loading" class="flex justify-center items-center py-20">
-      <div class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"></div>
+      <div
+        class="animate-spin border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10"
+      ></div>
     </div>
 
     <!-- Table -->
-    <table v-if="!loading" class="min-w-[600px] w-full divide-y text-center divide-gray-200">
-      <thead class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+    <table
+      v-if="filteredItems && !loading"
+      class="min-w-[600px] w-full divide-y text-center divide-gray-200"
+    >
+      <thead class="bg-gradient-to-r bg-primary text-white">
         <tr>
           <th
             v-for="header in headers"
@@ -120,7 +58,9 @@ watch(search, () => {
           >
             {{ header.label }}
           </th>
-          <th class="px-6 py-4 text-center text-md font-semibold tracking-wider">
+          <th
+            class="px-6 py-4 text-center text-md font-semibold tracking-wider"
+          >
             Actions
           </th>
         </tr>
@@ -136,9 +76,17 @@ watch(search, () => {
           <td
             v-for="header in headers"
             :key="header.key"
-            class="px-6 py-4 whitespace-nowrap"
+            class="px-6 py-4 whitespace-nowrap break-words"
           >
-            {{ getValueByPath(item, header.key) }}
+            <!-- Make the 'name' column clickable -->
+            <span
+              v-if="header.key === 'name'"
+              @click="showDetails(item)"
+              class="cursor-pointer font-semibold text-indigo-600 hover:text-indigo-800"
+            >
+              {{ getValueByPath(item, header.key) }}
+            </span>
+            <span v-else>{{ getValueByPath(item, header.key) }}</span>
           </td>
 
           <td class="px-6 py-4 whitespace-nowrap space-x-6">
@@ -146,13 +94,13 @@ watch(search, () => {
               @click="$emit('edit', item)"
               class="text-indigo-600 cursor-pointer hover:text-indigo-800 transition inline-flex items-center gap-1"
             >
-              <Edit class="w-4 h-4" /> Edit
+              <Edit class="w-4 h-4" />
             </button>
             <button
               @click="$emit('delete', item.id)"
               class="text-red-600 cursor-pointer hover:text-red-800 transition inline-flex items-center gap-1"
             >
-              <Trash2 class="w-4 h-4" /> Delete
+              <Trash2 class="w-4 h-4" />
             </button>
           </td>
         </tr>
@@ -178,7 +126,7 @@ watch(search, () => {
     </table>
 
     <!-- Pagination -->
-    <div class="flex justify-between p-4" v-if="!loading">
+    <div class="flex justify-center gap-3 mt-4 p-4" v-if="!loading">
       <button
         @click="goToPreviousPage"
         :disabled="currentPage === 1"
@@ -199,6 +147,175 @@ watch(search, () => {
         Next
       </button>
     </div>
+
+    <DetailsPopup
+      v-if="selectedExam"
+      :selectedExam="selectedExam"
+      :isExam="isExam"
+      :isInstructors="isInstructors"
+      :isEmployee="isEmployee"
+      @close="selectedExam = null"
+    />
+    <!-- DetailsPopup -->
+    <!-- <div
+  v-if="selectedExam"
+  class="fixed inset-0 bg-[rgba(0,0,0,0.6)] bg-opacity-50 flex items-center justify-center z-50 transition-all duration-300 ease-in-out"
+>
+  <div class="bg-white relative p-8 rounded-lg shadow-2xl max-w-lg w-full transform transition-all duration-500 ease-in-out scale-95 hover:scale-100">
+   
+    <div class="mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">Exam Details</h2>
+      <div class="border-b-2 border-gray-300 mb-4"></div>
+    </div>
+
+ 
+    <div v-if="isExam">
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Description:</strong> {{ selectedExam.description }}
+      </p>
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Questions Count:</strong> {{ selectedExam.questions_count }}
+      </p>
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Created At:</strong> {{ formatDate(selectedExam.created_at) }}
+      </p>
+    </div>
+
+    <div v-if="isInstructors">
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Phone:</strong> {{ selectedExam.phone }}
+      </p>
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Updated At:</strong> {{ selectedExam.updated_at }}
+      </p>
+      <p class="text-gray-700 text-sm mb-2">
+        <strong class="text-primary font-medium">Created At:</strong> {{ formatDate(selectedExam.created_at) }}
+      </p>
+    </div>
+
+
+
+ 
+    <div class="mt-6 flex justify-end">
+      <button
+        @click="selectedExam = null"
+        class="px-6 py-2 bg-indigo-600 cursor-pointer text-white rounded-lg hover:bg-indigo-700 transition duration-200"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div> -->
+
   </div>
 </template>
 
+<script setup>
+import { ref, computed, watch } from "vue";
+import { Edit, Trash2 } from "lucide-vue-next";
+import DetailsPopup from "../global/DetailsPopup.vue";
+
+const props = defineProps({
+  headers: Array,
+  items: Array,
+  loading: Boolean,
+  isExam: Boolean,
+  isInstructors: Boolean,
+  isEmployee: Boolean
+});
+
+const search = ref("");
+const currentPage = ref(1);
+const itemsPerPage = 5;
+const selectedExam = ref(null);
+
+// Function to format the created_at or updated_at date
+const formatDate = (date) => {
+  if (!date) return "";
+  const options = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(date).toLocaleString("en-US", options);
+};
+
+const filteredItems = computed(() => {
+  return props.items.filter(
+    (item) =>
+      item.name && item.name.toLowerCase().includes(search.value.toLowerCase())
+  );
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredItems.value.length / itemsPerPage);
+});
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredItems.value.slice(start, end);
+});
+
+function getValueByPath(obj, path) {
+  if (path === "created_at" || path === "Updated_at") {
+    return formatDate(obj[path]);
+  }
+
+  if (path === "courses") {
+  return obj.courses && obj.courses.length > 0
+    ? obj.courses.map((course) => `(${course.name})`).join(", ")
+    : "No courses";
+}
+
+if (path === "roles") {
+  return obj.roles && obj.roles.length > 0
+    ? obj.roles.map((role) => `(${role.name})`).join(", ") 
+    : "No roles";
+}
+if (path === "permissions") {
+  return obj.permissions && obj.permissions.length > 0
+    ? obj.permissions.map((permissions) => `(${permissions.name})`).join(", ") 
+    : "No Permissions";
+}
+
+
+
+
+  return (
+    path
+      .split(".")
+      .reduce((o, key) => (o && o[key] !== undefined ? o[key] : ""), obj) || ""
+  );
+}
+
+const goToPreviousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const goToNextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
+const showDetails = (exam) => {
+  selectedExam.value = exam;
+};
+
+watch(search, () => {
+  currentPage.value = 1;
+});
+</script>
+
+<style scoped>
+/* Allow text wrapping in table cells */
+td {
+  word-wrap: break-word;
+  white-space: normal;
+}
+</style>

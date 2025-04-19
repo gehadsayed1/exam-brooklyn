@@ -23,7 +23,7 @@ onBeforeUnmount(() => {
   <div class="flex flex-col items-center justify-center ">
     <img :src="thank" alt="Thank you image">
     <h1 class="text-2xl text-green-700 font-bold mb-4 mt-10">Exam submitted successfully</h1>
-    <button @click="redirectToHome" class="bg-primary  cursor-pointer text-white py-2 px-4 rounded-lg hover:bg-blue-600">Home</button>
+    <button @click="redirectToHome" class="bg-primary w-1/4  cursor-pointer text-white py-2 font-semibold px-6 rounded-lg hover:bg-blue-600">Home</button>
   </div>
  </div>
 </template>

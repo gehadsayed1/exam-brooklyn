@@ -6,10 +6,16 @@
  export const SUBMIT_EXAM_ANSWERS = "submitAnswers";
  export const FINISH_EXAM_API = "finishExam";  
  export const LOGIN = "login"
+ export const REGISTER = "register"
+ export const USERS = "users"
+ export const USER_BY_TOKEN = "user"
+ export const ROLES = "roles"
+    export const PERMISSIONS = "permissions"
  export const SEND_OTP_API = "sendOTP"
  export const ALL_INSTRUCTORS = "instructors"
  export const ALL_COURSES = "courses"
  export const ALL_EXAMS = "exams"
  export const ADD_EXAM = "addExam"
  export const QUESTIONS = "questions"
+ export const ALL_SCHOLARSHIPS= "scholarships"
 

@@ -18,42 +18,59 @@ export const useCourseStore = defineStore('courseStore', () => {
     try {
       const response = await apiClient.get(ALL_COURSES)
       courses.value = response.data.data
+    
     } catch (err) {
       error.value = 'Failed to fetch courses'
       notyf.error(error.value)
       console.error(err)
+      loading.value = false
     } finally {
       loading.value = false
     }
   }
 
   const addCourse = async (course) => {
+    console.log(course);
+    
     try {
       const response = await apiClient.post(ALL_COURSES, course)
       courses.value.push(response.data.data)
+      console.log(response.data.data);
+      
       notyf.success('Course added successfully')
     } catch (err) {
-      error.value = 'Failed to add course'
-      notyf.error(error.value)
+      
       console.error(err)
+      err.data.errors.forEach((error) => {
+        notyf.error(error.message)
+      })
+      loading.value = false
     }
   }
   
 
   const updateCourse = async (id, updatedData) => {
     try {
-      const response = await apiClient.put(`${ALL_COURSES}/${id}`, updatedData)
-      const index = courses.value.findIndex(c => c.id === id)
+      const response = await apiClient.put(`${ALL_COURSES}/${id}`, updatedData);
+  
+      // Find the course by id and update it in the array
+      const index = courses.value.findIndex(course => course.id === id);
       if (index !== -1) {
-        courses.value.splice(index, 1, response.data.data) 
+        // Update the course at the found index
+        courses.value[index] = response.data.data;
+      } else {
+        console.error("Course not found");
       }
-      notyf.success('Course updated successfully')
+  
+      notyf.success('Course updated successfully');
     } catch (err) {
-      error.value = 'Failed to update course'
-      notyf.error(error.value)
-      console.error(err)
+      console.log(err);
+      error.value = 'Failed to update course';
+      notyf.error(error.value);
+      console.error(err);
     }
   }
+  
   
 
   const deleteCourse = async (id) => {

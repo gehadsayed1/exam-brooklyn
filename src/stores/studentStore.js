@@ -9,7 +9,7 @@ import {
   SUBMIT_EXAM_ANSWERS,
   SEND_OTP_API,
 } from "../api/Api";
-import notyf from '@/components/global/notyf' 
+import notyf from "@/components/global/notyf";
 import { useRouter } from "vue-router";
 
 export const useStudentStore = defineStore("studentStore", () => {
@@ -42,6 +42,8 @@ export const useStudentStore = defineStore("studentStore", () => {
     try {
       const response = await apiClient.get(`${STUDENT_ID}/${studentId.value}`);
       courses.value = response.data;
+      console.log(courses.value);
+
       otpSent.value = true;
       errorMessages.value = "";
       console.log(response.data);
@@ -126,6 +128,7 @@ export const useStudentStore = defineStore("studentStore", () => {
       const response = await apiClient.get(
         `${INSTRUCTORS}/${selectedModule.value}`
       );
+
       instructors.value = response.data;
     } finally {
       loading.value = false;
@@ -166,7 +169,6 @@ export const useStudentStore = defineStore("studentStore", () => {
     } catch (error) {
       console.error(error);
 
-      
       if (error.response && error.response.data) {
         if (error.response.data.message === "OTP expired or not found") {
           studentOTP.value = "";

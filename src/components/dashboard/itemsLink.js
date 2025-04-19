@@ -1,28 +1,42 @@
-// 📁 src/constants/sidebarItems.js
-import { BookOpenCheck, PlusCircle, Settings } from 'lucide-vue-next'
+import { BookOpenCheck, PlusCircle, Settings, Users, FileText, GraduationCap, ShieldCheck, UserCog } from 'lucide-vue-next'
 
 export const items = [
+  {
+    name: 'Employees',
+    icon: UserCog,
+    route: 'employees'
+  },
   {
     name: 'Exams',
     icon: BookOpenCheck,
     children: [
-      { name: 'All Exams', route: 'exams' },
-      { name: 'Create Exam', route: 'create-exam' }
+      { name: 'All Exams', route: 'exams', icon: FileText },  
+      { name: 'Create Exam', route: 'create-exam', icon: PlusCircle }  
     ]
   },
   {
     name: 'Courses',
-    icon: PlusCircle,
+    icon: GraduationCap,  
     route: 'courses'
   },
   {
     name: 'Instructors',
-    icon: PlusCircle,
+    icon: Users,  
     route: 'instructors'
   },
   {
+    name: 'Scholarships',
+    icon: GraduationCap,  
+    route: 'scholarships'
+  },
+  {
+    name: 'Roles',
+    icon: ShieldCheck,  
+    route: 'roles'
+  },
+  {
     name: 'Settings',
-    icon: Settings,
+    icon: Settings,  
     route: 'settings'
   }
 ]

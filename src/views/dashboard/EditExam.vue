@@ -8,8 +8,9 @@
 
     <div v-else>
       <div class="flex flex-wrap items-center justify-center gap-4">
-        <InstructorSelect v-model="exam.ins_id" />
         <CourseSelect v-model="exam.course_id" />
+        <InstructorSelect v-model="exam.ins_id" />
+        
       </div>
 
       <!-- Pass v-model to ExamInfoForm to track changes -->
@@ -133,6 +134,8 @@ watch(
 onMounted(async () => {
   const examId = route.params.id;
   await examStore.fetchExamById(examId);
+  console.log(examStore.singleExam);
+  
 
   if (examStore.singleExam) {
     const fetched = examStore.singleExam;
@@ -186,6 +189,7 @@ const updateExam = async () => {
     console.log("Submitting exam data:", exam.value);
     
     await examStore.updateExam(route.params.id, exam.value);
+ 
     
     hasChanges.value = false;
   } catch (err) {
@@ -198,16 +202,16 @@ const updateExam = async () => {
 const submitNewQuestions = async () => {
   submittingNewQuestions.value = true;
   
-  // تحقق من أن جميع الأسئلة تحتوي على قيم
+ 
   for (let question of addQuestions.value) {
     if (!question.question_text || !question.option_a || !question.option_b || !question.option_c || !question.option_d) {
       notyf.error("Please fill in all fields for each question.");
       submittingNewQuestions.value = false;
-      return; // منع الإرسال إذا كانت الحقول غير مكتملة
+      return; 
     }
   }
   
-  // إرسال الأسئلة المكتملة إلى الخادم
+
   try {
     console.log("Submitting new questions:", addQuestions.value);
     console.log("Exam ID:", route.params.id);

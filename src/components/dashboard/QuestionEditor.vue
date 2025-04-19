@@ -8,18 +8,14 @@
             Number of questions
           </div>
           <div
-            class="flex justify-center items-center bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-semibold w-8 h-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-110"
-          >
+            class="flex justify-center items-center bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 text-white font-semibold w-8 h-8 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-110">
             {{ questions.length }}
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <label class="text-sm text-gray-600">Go to:</label>
-          <select
-            v-model="currentQuestionIndex"
-            class="border rounded-md px-2 py-1"
-          >
+          <select v-model="currentQuestionIndex" class="border rounded-md px-2 py-1">
             <option v-for="(q, index) in questions" :key="q.id" :value="index">
               Question {{ index + 1 }}
             </option>
@@ -31,31 +27,24 @@
       <div class="border p-4 rounded space-y-3 relative">
         <div>
           <label class="text-sm font-medium text-gray-700">Question Text</label>
-          <input
-            v-model="questions[currentQuestionIndex].question_text"
-            type="text"
+          <input v-model="questions[currentQuestionIndex].question_text" type="text"
             class="w-full border bg-indigo-400 shadow-lg text-xl text-gray-50 px-5 py-3 rounded-md"
-            @input="setModified(true)"
-          />
+            @input="setModified(true)" />
         </div>
 
-        <div v-for="(opt, index) in ['A', 'B', 'C', 'D']" :key="index">
-          <label class="text-sm capitalize">Option {{ opt }}</label>
-          <input
-            v-model="questions[currentQuestionIndex].options[opt]"
-            type="text"
-            class="w-full border-1 border-indigo-300 px-3 py-2 rounded-md"
-            @input="setModified(true)"
-          />
+        <div class="grid grid-cols-2 gap-4">
+          <div v-for="(opt, index) in ['A', 'B', 'C', 'D']" :key="index">
+            <label class="text-sm capitalize">Option {{ opt }}</label>
+            <input v-model="questions[currentQuestionIndex].options[opt]" type="text"
+              class="w-full border-1 border-indigo-300 px-3 py-2 rounded-md" @input="setModified(true)" />
+          </div>
         </div>
+
 
         <div class="text-center flex flex-col items-center mt-8">
           <label class="text-sm">Correct Option</label>
-          <select
-            v-model="questions[currentQuestionIndex].correct_option"
-            class="w-1/5 px-3 py-2 rounded-md border-1 border-indigo-500"
-            @change="setModified(true)"
-          >
+          <select v-model="questions[currentQuestionIndex].correct_option"
+            class="w-1/5 px-3 py-2 rounded-md border-1 border-indigo-500" @change="setModified(true)">
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -65,43 +54,29 @@
 
         <!-- Actions -->
         <div class="flex justify-between items-center mt-4">
-          <button
-            @click="saveQuestion(questions[currentQuestionIndex])"
-            class="text-white flex items-center gap-1 cursor-pointer px-4 py-2 rounded-md"
-            :class="{
+          <button @click="saveQuestion(questions[currentQuestionIndex])"
+            class="text-white flex items-center gap-1 cursor-pointer px-4 py-2 rounded-md" :class="{
               'bg-gray-400': !isModified,
               'bg-blue-600 hover:bg-blue-500': isModified,
-            }"
-            :disabled="!isModified || saving"
-          >
-            <span
-              v-if="saving"
-              class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"
-            ></span>
-            <span v-else class="flex items-center gap-1"
-              ><ArrowDownToDot class="w-5 h-5 flex" />
-              {{ saving ? "saving.." : "Save" }}</span
-            >
+            }" :disabled="!isModified || saving">
+            <span v-if="saving"
+              class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4 inline-block mr-2"></span>
+            <span v-else class="flex items-center gap-1">
+              <ArrowDownToDot class="w-5 h-5 flex" />
+              {{ saving ? "saving.." : "Save" }}
+            </span>
           </button>
 
-          <button
-            @click="deleteQuestion(questions[currentQuestionIndex].id)"
+          <button @click="deleteQuestion(questions[currentQuestionIndex].id)"
             class="text-red-500 hover:text-red-700 px-4 py-2 rounded cursor-pointer transition-all duration-200"
-            :disabled="saving"
-          >
+            :disabled="saving">
             <Beer class="w-7 h-7 hover:scale-110" />
           </button>
         </div>
       </div>
 
-      <SweetAlert2Modal
-        v-if="showDeleteAlertDialog"
-        title="Are you sure?"
-        text="This question will be deleted."
-        icon="warning"
-        @confirm="confirmDelete"
-        @cancel="cancelDelete"
-      />
+      <SweetAlert2Modal v-if="showDeleteAlertDialog" title="Are you sure?" text="This question will be deleted."
+        icon="warning" @confirm="confirmDelete" @cancel="cancelDelete" />
     </div>
 
     <div v-else class="text-center text-gray-500 font-bold">

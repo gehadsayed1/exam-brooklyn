@@ -15,14 +15,15 @@
       <DataTable
         :headers="[
           { label: 'Name', key: 'name' },
-          { label: 'Phone', key: 'phone' },
-          { label: 'Created_at', key: 'created_at' },
-          { label: 'Updated_at', key: 'updated_at' || '' }
+          { label: 'courses', key: 'courses' },
+         
         ]"
         :items="filteredInstructors"
+        :isInstructors="true"
         @edit="editInstructor"
         @delete="showDeleteAlert"
         :loading="instructorStore.loading"
+        :search="search"
       />
     </div>
 
@@ -76,12 +77,15 @@ const filteredInstructors = computed(() => {
 
 const openAddModal = () => {
   isEditing.value = false;
-  formInstructor.value = { name: "", phone: "" };
+  formInstructor.value = { name: "", phone: ""  };
   showModal.value = true;
 };
 
+
+
 const editInstructor = (instructor) => {
   isEditing.value = true;
+  
   formInstructor.value = { ...instructor };
   showModal.value = true;
 };
