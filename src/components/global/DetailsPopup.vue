@@ -1,6 +1,6 @@
 <template>
     <div
-      v-if="selectedExam"
+      v-if="selectedExam || isExam || isInstructors || isEmployee"
       class="fixed inset-0 bg-[rgba(0,0,0,0.6)] bg-opacity-50 flex items-center justify-center z-50 transition-all duration-300 ease-in-out"
     >
       <div class="bg-white relative p-8 rounded-lg shadow-2xl max-w-lg w-full transform transition-all duration-500 ease-in-out scale-95 hover:scale-100">

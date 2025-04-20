@@ -16,11 +16,15 @@ const errors = ref({
   password: "",
 });
 
+// reset password form
+
+
+
 // forgot password form
 const forgotEmail = ref("");
 const isResetting = ref(false);
 const forgotError = ref("");
-const forgotSuccess = ref("");
+
 
 // yup schema
 const schema = yup.object().shape({
@@ -66,18 +70,22 @@ async function handleLogin() {
 
 async function handleForgotPassword() {
   forgotError.value = "";
-  forgotSuccess.value = "";
   isResetting.value = true;
+console.log("forgotEmail.value", forgotEmail.value);
 
-  // simulate request
-  setTimeout(() => {
-    if (forgotEmail.value.includes("@")) {
-      forgotSuccess.value = "Reset link sent successfully!";
-    } else {
-      forgotError.value = "Please enter a valid email.";
-    }
-    isResetting.value = false;
-  }, 1500);
+  await auth.forgotPassword(forgotEmail.value);
+  isResetting.value = false;
+
+
+  // // simulate request
+  // setTimeout(() => {
+  //   if (forgotEmail.value.includes("@")) {
+  //     forgotSuccess.value = "Reset link sent successfully!";
+  //   } else {
+  //     forgotError.value = "Please enter a valid email.";
+  //   }
+  //   isResetting.value = false;
+  // }, 1500);
 }
 </script>
 
@@ -169,12 +177,12 @@ async function handleForgotPassword() {
             <div class="field-wrapper dark:text-white text-gray-400">
               <input type="text" v-model="forgotEmail" placeholder=" " />
               <label>e-mail</label>
-              <p v-if="forgotError" class="text-red-500 text-sm mt-1">
+               <!-- <p v-if="forgotError" class="text-red-500 text-sm mt-1">
                 {{ forgotError }}
-              </p>
-              <p v-if="forgotSuccess" class="text-green-600 text-sm mt-1">
-                {{ forgotSuccess }}
-              </p>
+              </p> -->
+              <p v-if="auth.forgotSuccess" class="text-green-600 text-sm mt-1">
+                {{ auth.forgotSuccess }}
+              </p> 
             </div>
 
             <div class="field-wrapper">

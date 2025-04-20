@@ -10,6 +10,7 @@ const routes = [
   { path: '/examPage', name: 'examPage', component: Exam },
   { path: '/result', name: 'ResultPage', component: () => import('../views/pages/ResultPage.vue') },
   { path: '/systems', name: 'SystemsPage', component: () => import('../views/dashboard/SystemsPage.vue') },
+  { path: '/password-reset', name: 'password-reset', component: () => import('../views/pages/password-reset.vue') },
   { path: '/:catchAll(.*)', name: 'error', component: () => import('@/views/pages/Error404.vue') },
   // dashboard
   {

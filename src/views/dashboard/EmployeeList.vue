@@ -168,9 +168,9 @@ const editEmployee = (employee) => {
   isEditing.value = true;
   formEmployee.value = { 
     ...employee, 
-    roles: employee.roles || [] // Ensure roles is always an array
+    roles: employee.roles || []
   };
-  showModal.value = true;
+  showModal.value = false;
 };
 
 const closeModal = () => {
@@ -192,6 +192,7 @@ const saveEmployee = async () => {
       closeModal();
     } else {
       await employeesStore.addEmployee(formEmployee.value);
+      showModal.value = false;
     }
   } catch (error) {
     console.error(error);

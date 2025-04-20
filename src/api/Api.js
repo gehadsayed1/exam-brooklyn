@@ -10,7 +10,7 @@
  export const USERS = "users"
  export const USER_BY_TOKEN = "user"
  export const ROLES = "roles"
-    export const PERMISSIONS = "permissions"
+ export const PERMISSIONS = "permissions"
  export const SEND_OTP_API = "sendOTP"
  export const ALL_INSTRUCTORS = "instructors"
  export const ALL_COURSES = "courses"
@@ -18,4 +18,6 @@
  export const ADD_EXAM = "addExam"
  export const QUESTIONS = "questions"
  export const ALL_SCHOLARSHIPS= "scholarships"
+ export const  FORGOT_PASSWORD = "forgotPassword"
+    export const RESET_PASSWORD = "students/reset-password"
 
