@@ -24,6 +24,8 @@ const exam = computed(() => examData.value?.exam || {});
 const questions = computed(() => exam.value?.questions || []);
 const previousAnswers = computed(() => examData.value?.answers || []);
 const showUnansweredMessage = ref("");
+// في script setup
+const currentQuestionIndex = ref(null);
 
 const answersArray = ref([]);
 const timeLeft = ref(remainingTime.value);
@@ -31,17 +33,13 @@ const selectedOptions = ref([]);
 const quizStarted = ref(false);
 const isSubmitting = ref(false);
 let interval;
-const currentQuestionIndex = ref(null);
+
 
 const mode = ref("all");
 
 const unansweredIndexes = ref([]);
 
-const filteredQuestions = computed(() => {
-  return mode.value === "filter"
-    ? questions.value.filter((_, i) => unansweredIndexes.value.includes(i))
-    : questions.value;
-});
+
 
 const currentQuestion = computed(
   () => questions.value[currentQuestionIndex.value] || null
@@ -52,8 +50,15 @@ const isLastQuestion = computed(
 
 const answeredCount = computed(() => studentStore.examAnswers.length);
 
-// Track if page was reloaded or not
-const lode = ref(false);
+
+
+const filteredQuestions = computed(() => {
+  return mode.value === "filter"
+    ? questions.value.filter(
+        (_, i) => unansweredIndexes.value.includes(i)
+      )
+    : questions.value;
+});
 
 const startTimer = () => {
   interval = setInterval(() => {
@@ -183,6 +188,7 @@ const submitFinalExam = async () => {
       unansweredIndexes.value = unansweredQuestionIndexes.map((n) => n - 1);
       showUnansweredMessage.value = `Please answer all questions.`;
       mode.value = "filter";
+      currentQuestionIndex.value = unansweredIndexes.value[0];
       return;
     } else {
       showUnansweredMessage.value = "";
@@ -252,29 +258,34 @@ onBeforeUnmount(() => {
           >Go to question:</label
         >
         <select
-          v-model="currentQuestionIndex"
-          class="border px-4 py-2 rounded-md font-semibold"
-          :class="{
-            'border-red-500 text-red-600':
-              unansweredIndexes.length > 0 && mode === 'filter',
-            'border-indigo-500 text-indigo-700': mode !== 'filter',
-          }"
-        >
-          <option :value="null" disabled>
-            {{
-              unansweredIndexes.length > 0 && mode === "filter"
-                ? "Unanswered questions"
-                : "Select a question"
-            }}
-          </option>
-          <option
-            v-for="(q, index) in filteredQuestions"
-            :key="index"
-            :value="index"
-          >
-            Question {{ index + 1 }}
-          </option>
-        </select>
+  v-model="currentQuestionIndex"
+  class="border px-4 py-2 rounded-md font-semibold"
+  @change="loadSelectedOption"
+  :class="{
+    'border-red-500 text-red-600': unansweredIndexes.length > 0 && mode === 'filter',
+    'border-indigo-500 text-indigo-700': mode !== 'filter',
+  }"
+>
+  <option
+    :value="null"
+    disabled
+    selected
+  >
+    {{
+      mode === 'filter' && unansweredIndexes.length > 0
+        ? 'Unanswered questions'
+        : 'Select a question'
+    }}
+  </option>
+
+  <option
+    v-for="(q, index) in filteredQuestions"
+    :key="index"
+    :value="index"
+  >
+    Question {{ index + 1 }}
+  </option>
+</select>
       </div>
       <div v-if="currentQuestion" class="question-container">
         <h3

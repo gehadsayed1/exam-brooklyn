@@ -64,6 +64,7 @@ const validate = () => {
 };
 
 const submitExam = async () => {
+  submitting.value = true;
   try {
     console.log(exam.value);
 
@@ -99,7 +100,8 @@ const submitExam = async () => {
         </p>
       </div>
       <div>
-        <InstructorSelect v-model="exam.ins_id" />
+      
+        <InstructorSelect v-model="exam.ins_id"  :disabled="!exam.crs_id" />
 
         <p v-if="errors.ins_id" class="text-red-500 text-sm ms-5">
           {{ errors.ins_id }}

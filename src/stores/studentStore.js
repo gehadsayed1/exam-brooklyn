@@ -63,21 +63,17 @@ export const useStudentStore = defineStore("studentStore", () => {
       clearInterval(startTimer);
     }
 
-    if (otpMasg.value === "OTP sent to your email") {
-      timer.value = 120;
-      startTimer = setInterval(() => {
-        if (timer.value > 0) {
-          timer.value--;
-        } else if (timer.value === 0) {
-          clearInterval(startTimer);
-          timer.value = 120;
-          otpMasg.value = "OTP is expired.";
-          otpMessageColor.value = "text-red-500";
-        }
-      }, 1000);
-    } else {
-      console.log("OTP not sent yet, countdown not started");
-    }
+    timer.value = 120;
+    startTimer = setInterval(() => {
+      if (timer.value > 0) {
+        timer.value--;
+      } else if (timer.value === 0) {
+        clearInterval(startTimer);
+        timer.value = 120;
+        otpMasg.value = "OTP is expired.";
+        otpMessageColor.value = "text-red-500";
+      }
+    }, 1000);
   };
 
   const sendOTP = async (studentId) => {
@@ -122,6 +118,8 @@ export const useStudentStore = defineStore("studentStore", () => {
   };
 
   const fetchInstructors = async () => {
+    console.log("Selected Module:", selectedModule.value);
+
     if (!selectedModule.value) return;
     loading.value = true;
     try {
@@ -130,6 +128,8 @@ export const useStudentStore = defineStore("studentStore", () => {
       );
 
       instructors.value = response.data;
+      console.log(response.data);
+      console.log(instructors.value);
     } finally {
       loading.value = false;
     }
@@ -170,19 +170,7 @@ export const useStudentStore = defineStore("studentStore", () => {
       console.error(error);
 
       if (error.response && error.response.data) {
-        if (error.response.data.message === "OTP expired or not found") {
-          studentOTP.value = "";
-          otpMasg.value = "ُExpired OTP. Please try again.";
-          otpMessageColor.value = "text-red-500";
-          timer.value = 120;
-          clearInterval(startTimer);
-        }
-        if (error.response.data.message === "Student not found") {
-          errorMessages.value = "ID is not found. Please try again.";
-          studentOTP.value = "";
-        }
-      } else {
-        console.error("استجابة الخطأ غير متوقعة", error);
+        errorMessages.value = error.response.data.message || "Something went wrong.";
       }
       loading.value = false;
       router.push({ name: "home" });

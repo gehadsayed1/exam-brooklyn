@@ -35,8 +35,8 @@ onMounted(() => {
 <style scoped>
 
 .theme-switcher {
-  width: 60px;
-  height: 30px;
+  width: 50px;
+  height: 20px;
   background-color: #ddd;
   border-radius: 30px;
   display: flex;
@@ -54,8 +54,8 @@ onMounted(() => {
 
 
 .toggle-button {
-  width: 25px;
-  height: 25px;
+  width: 18px;
+  height: 18px;
   background-color: white;
   border-radius: 50%;
   display: flex;

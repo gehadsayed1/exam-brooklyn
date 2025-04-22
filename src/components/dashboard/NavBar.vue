@@ -13,7 +13,7 @@
       </router-link>
       <div class="flex items-center gap-2 cursor-pointer">
         <div class="text-gray-700 dark:text-gray-200 font-semibold text-sm flex items-center">
-          <strong>Welcome,</strong><span class="text-primary">({{ userData?.name || 'Loading...' }})</span>
+          <strong>Welcome,</strong><span class="text-primary">({{ user?.name || 'Loading...' }})</span>
         </div>
         <img class="rounded-full w-8 h-8" src="../../assets/avatar-1.png" alt="User Avatar" />
       </div>
@@ -26,7 +26,7 @@
               My Profile
             </router-link>
             <button class="w-full text-right  flex gap-2 items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 
-                     hover:bg-gray-100 dark:hover:bg-gray-600" @click="AuthStore.logout()">
+                     hover:bg-gray-100 dark:hover:bg-gray-600" @click="authStore.logout()">
               <LogOut class="w-5 h-5" />
               Logout
             </button>
@@ -38,31 +38,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
 import { AlignLeft, HomeIcon, LogOut } from 'lucide-vue-next';
 import { inject } from 'vue';
-import { useEmployeeStore } from '@/stores/employeesStore';
 import { useAuthStore } from '@/stores/auth';
 
+
+const authStore = useAuthStore();
+
+const user = computed(() => authStore.user);
 const emitter = inject('emitter');
-const AuthStore = useAuthStore()
-const userStore = useEmployeeStore();
-const userData = ref(null);
 const isSidebarOpen = ref(false);
 const isMenuOpen = ref(false);
-const router = useRouter();
 
 
-onMounted(async () => {
-  try {
-    await userStore.fetchUser();
-    userData.value = userStore.user;
-    console.log('User Data:', userData.value);
-  } catch (error) {
-    console.error('Failed to fetch user data:', error);
-  }
-});
+
+
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;

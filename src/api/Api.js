@@ -19,5 +19,5 @@
  export const QUESTIONS = "questions"
  export const ALL_SCHOLARSHIPS= "scholarships"
  export const  FORGOT_PASSWORD = "forgotPassword"
-    export const RESET_PASSWORD = "students/reset-password"
+    export const RESET_PASSWORD = "resetPassword"
 

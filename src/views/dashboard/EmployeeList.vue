@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold text-gray-800 mb-4">Employee List</h1>
 
       <!-- Button to trigger modal -->
-      <button @click="showForm = true" class="px-4 py-2 bg-indigo-500 cursor-pointer text-white rounded hover:bg-indigo-600">
+      <button v-if="authStore.hasPermission('create-student')" @click="showForm = true" class="px-4 py-2 bg-indigo-500 cursor-pointer text-white rounded hover:bg-indigo-600">
         Create New Employee
       </button>
     </div>
@@ -116,8 +116,10 @@ import Modal from '@/components/global/Modal.vue';
 import { useEmployeeStore } from '@/stores/employeesStore';
 import DataTable from '@/components/dashboard/DataTable.vue';
 import { X } from 'lucide-vue-next';
+import { useAuthStore } from '@/stores/auth';
 
 const employeesStore = useEmployeeStore();
+const authStore = useAuthStore(); // Assuming you have an auth store to manage authentication
 
 const isEditing = ref(false);
 const showDeleteAlertDialog = ref(false);
@@ -164,15 +166,12 @@ const cancelDelete = () => {
   itemToDelete.value = null;
 };
 
-const editEmployee = (employee) => {
-  isEditing.value = true;
-  formEmployee.value = { 
-    ...employee, 
-    roles: employee.roles || []
+const editEmployee = (employees) => {
+    isEditing.value = true;
+    
+    formEmployee.value = { ...employees };
+    showModal.value = true;
   };
-  showModal.value = false;
-};
-
 const closeModal = () => {
   showModal.value = false;
   isEditing.value = false;

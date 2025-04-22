@@ -2,12 +2,15 @@
 import { ref } from "vue";
 import { useAuthStore } from "../../stores/auth";
 import * as yup from "yup";
+import Cookies from "js-cookie";
+import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const prism = ref(null);
 
 // login form data
 const email = ref("");
+const router = useRouter();
 const password = ref("");
 const showPassword = ref(false);
 const isLoading = ref(false);
@@ -25,6 +28,10 @@ const forgotEmail = ref("");
 const isResetting = ref(false);
 const forgotError = ref("");
 
+
+if (Cookies.get("token")) {
+  router.push({ name: "examPage"});
+}
 
 // yup schema
 const schema = yup.object().shape({

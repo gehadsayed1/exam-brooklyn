@@ -1,11 +1,11 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, onBeforeMount } from "vue";
 import Cookies from "js-cookie";
-
 import { useRouter } from "vue-router";
 import notyf from "@/components/global/notyf";
 import apiClient from "../api/axiosInstance";
-import { FORGOT_PASSWORD, LOGIN, RESET_PASSWORD } from "../api/Api";
+import { FORGOT_PASSWORD, LOGIN, RESET_PASSWORD, USER_BY_TOKEN } from "../api/Api";
+import CryptoJS from "crypto-js"; // تم إضافته
 
 export const useAuthStore = defineStore("authStore", () => {
   const token = ref(null);
@@ -13,44 +13,60 @@ export const useAuthStore = defineStore("authStore", () => {
   const loading = ref(false);
   const error = ref(null);
   const forgotSuccess = ref("");
-
   const router = useRouter();
+  const permissions = ref([]);
+
+  const secretKey = "secret-key-123"; // حطي مفتاح سري ثابت للتشفير وفك التشفير
+
+  // تشفير permissions
+  const encryptPermissions = (perms) => {
+    const stringified = JSON.stringify(perms);
+    return CryptoJS.AES.encrypt(stringified, secretKey).toString();
+  };
+
+  // فك التشفير
+  const decryptPermissions = (encrypted) => {
+    try {
+      const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
+      const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+      return JSON.parse(decryptedData);
+    } catch (error) {
+      console.error("Failed to decrypt permissions:", error);
+      return [];
+    }
+  };
+
+  const restoreUserFromCookies = () => {
+    const savedToken = Cookies.get("token");
+    const savedUser = Cookies.get("user");
+    const savedPermissions = Cookies.get("permissions");
+
+    if (savedToken && savedUser) {
+      token.value = savedToken;
+      user.value = JSON.parse(decodeURIComponent(savedUser));
+      permissions.value = savedPermissions ? decryptPermissions(savedPermissions) : [];
+    }
+  };
+
+  onBeforeMount(() => {
+    restoreUserFromCookies();
+  });
 
   const login = async (email, password) => {
     loading.value = true;
     error.value = null;
-    console.log(email, password);
 
     try {
-      const response = await apiClient.post(LOGIN, {
-        email,
-        password,
-      });
-      console.log(response);
-
+      const response = await apiClient.post(LOGIN, { email, password });
       token.value = response.data.token;
-      user.value = response.data.user;
-
-      console.log(token.value, user.value);
 
       Cookies.set("token", token.value, { expires: 7 });
-
-      Cookies.set("user", JSON.stringify(user.value), {
-        expires: 7,
-        path: "/",
-      });
-
-      const userFromCookie = Cookies.get("user");
-
-      if (userFromCookie) {
-        user.value = JSON.parse(decodeURIComponent(userFromCookie));
-      }
-      console.log(user.value);
+      await getUserByToken();
 
       notyf.success("Logged in successfully");
       router.push("/systems");
     } catch (err) {
-      console.error(err);
+      console.error("Login failed:", err);
       error.value = err.response?.data?.message || "Failed to login";
       notyf.error(error.value);
     } finally {
@@ -59,45 +75,35 @@ export const useAuthStore = defineStore("authStore", () => {
   };
 
   const logout = async () => {
-    await apiClient
-      .post("logout", {
-        headers: {
-          Authorization: `Bearer ${token.value}`,
-        },
-      })
-      .then((response) => {
-        notyf.success(response.data.message);
+    loading.value = true;
+    try {
+      await apiClient.post("logout", {}, {
+        headers: { Authorization: `Bearer ${token.value}` },
       });
-    token.value = null;
-    user.value = null;
-    Cookies.remove("token");
-    Cookies.remove("user");
-    router.push({ name: "login" });
+      notyf.success("Logged out successfully");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      token.value = null;
+      user.value = null;
+      permissions.value = [];
+      loading.value = false;
+
+      Cookies.remove("token");
+      Cookies.remove("user");
+      Cookies.remove("permissions");
+
+      router.push({ name: "login" });
+    }
   };
 
-  // const loadUserFromCookies = () => {
-
-  //   const savedToken = Cookies.get("token");
-  //   const savedUser = Cookies.get("user");
-
-  //   if (savedToken && savedUser) {
-  //     token.value = savedToken;
-  //     user.value = JSON.parse(savedUser);
-  //   }
-  // };
-
   const forgotPassword = async (email) => {
-    console.log(email);
     forgotSuccess.value = null;
     try {
-      const response = await apiClient.post(FORGOT_PASSWORD, {
-        email,
-      }); 
-      console.log(response);
+      const response = await apiClient.post(FORGOT_PASSWORD, { email });
       notyf.success(response.data.message);
       forgotSuccess.value = response.data.message;
     } catch (err) {
-      console.error(err);
       error.value = err.response?.data?.message || "Failed to send OTP";
       notyf.error(error.value);
       forgotSuccess.value = null;
@@ -105,38 +111,28 @@ export const useAuthStore = defineStore("authStore", () => {
       loading.value = false;
     }
   };
-   
+
   const resetPassword = async (form) => {
-    console.log("Form data:", form);
-  
     loading.value = true;
     error.value = null;
-  
+
     try {
-      // Send the request to the server
       const response = await apiClient.post(RESET_PASSWORD, form, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-  
-      console.log("Server response:", response);
-  
-      // Show success message and redirect to login
+
       notyf.success("Password reset successfully");
       router.push({ name: "login" });
     } catch (err) {
-      console.error("Error response:", err.response?.data);
-  
       if (err.response && err.response.status === 422) {
-        // Handle validation errors from the server
         const serverErrors = err.response.data.errors;
         for (const key in serverErrors) {
           error.value[key] = serverErrors[key][0];
         }
         notyf.error("Please fix the errors below.");
       } else {
-        // Handle other errors
         error.value = err.response?.data?.message || "Failed to reset password";
         notyf.error(error.value);
       }
@@ -145,15 +141,35 @@ export const useAuthStore = defineStore("authStore", () => {
     }
   };
 
+  const getUserByToken = async () => {
+    try {
+      const response = await apiClient.get(USER_BY_TOKEN);
+      user.value = response.data.User;
+      permissions.value = response.data.permissions;
+
+      Cookies.set("user", JSON.stringify(user.value), { expires: 7, path: "/" });
+      Cookies.set("permissions", encryptPermissions(permissions.value), { expires: 7, path: "/" });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const hasPermission = (permissionName) => {
+    return permissions.value.includes(permissionName);
+  };
+
   return {
-    forgotPassword,
-    resetPassword,
     token,
     user,
     loading,
     error,
+    getUserByToken,
     login,
     logout,
+    forgotPassword,
+    resetPassword,
     forgotSuccess,
+    permissions,
+    hasPermission,
   };
 });

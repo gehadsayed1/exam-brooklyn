@@ -41,6 +41,7 @@ watch(
 const submitForm = async () => {
   if (studentStore.studentOTP === "") {
     studentStore.otpMasg = "OTP is required.";
+    studentStore.timer = 0;
     studentStore.otpMessageColor = "text-red-500";
     studentStore.loading = false;
     return;
