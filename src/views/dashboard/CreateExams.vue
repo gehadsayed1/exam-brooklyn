@@ -7,11 +7,15 @@ import { computed, inject, onMounted, ref } from "vue";
 import { useExamStore } from "@/stores/examStore";
 import { useScholarshipStore } from "@/stores/scholarships";
 import notyf from "@/components/global/Notyf";
+import { useAuthStore } from "@/stores/auth";
 
+
+const authStore = useAuthStore();
 const examStore = useExamStore();
 const isAdding = ref(false);
 const emitter = inject("emitter");
 const scholarshipStore = useScholarshipStore();
+
 
 onMounted(() => {
   scholarshipStore.fetchScholarships();
@@ -115,6 +119,7 @@ const submitExam = async () => {
     <!-- Add Question Button -->
     <div class="flex justify-end mt-6">
       <button
+        v-if="authStore.hasPermission('create-questions')"
         v-show="!isAdding"
         @click="isAdding = true"
         class="bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 cursor-pointer flex items-center gap-2 min-w-[140px]"

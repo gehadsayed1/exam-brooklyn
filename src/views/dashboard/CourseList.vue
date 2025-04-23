@@ -3,6 +3,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-800">Course List</h1>
       <button
+        v-if="authStore.hasPermission('create-courses')"
         @click="toggleForm"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
@@ -19,9 +20,10 @@
           { label: 'Course Code', key: 'code' }
         ]"
         :items="filteredCourses"
+        resourceType="courses"
         @edit="editCourse"
         @delete="confirmDelete"
-        :loading="courseStore.loading"
+        
       />
     </div>
 
@@ -59,7 +61,10 @@ import DataTable from '@/components/dashboard/DataTable.vue';
 import SweetAlert2Modal from '@/components/global/SweetAlert2Modal.vue';
 import Modal from '@/components/global/Modal.vue';
 import { useScholarshipStore } from "@/stores/scholarships";
+import { useAuthStore } from "@/stores/auth";
 
+
+const authStore = useAuthStore();
 const courseStore = useCourseStore();
 const scholarshipStore = useScholarshipStore();
 const showModal = ref(false);

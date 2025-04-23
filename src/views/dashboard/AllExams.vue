@@ -31,6 +31,7 @@ onMounted(() => {
       ]"
       :isExam="true"
       :items="examStore.exams"
+      resourceType="exams"
       @edit="handleEditExam"
       @delete="examStore.deleteExam"
       :loading="examStore.loading"

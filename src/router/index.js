@@ -4,6 +4,7 @@ import Exam from "../views/pages/Exam.vue";
 import LogIn from "../views/pages/LogIn.vue";
 import dashboard from "../components/dashboard/Dashboard.vue";
 import { useAuthStore } from "../stores/auth";
+import accessControl from "./access-control";
 
 const routes = [
   { path: "/", name: "login", component: LogIn },
@@ -33,6 +34,7 @@ const routes = [
   {
     path: "/dashboard",
     component: dashboard,
+    name: "dashboard",
     meta: { requiresPermission: "view-dashboard" },
     children: [
       {
@@ -41,43 +43,51 @@ const routes = [
         component: () => import("@/views/dashboard/DashboardHome.vue"),
       },
       {
-        path: "employees",
-        name: "employees",
+        path: "users",
+        name: "users",
+        meta: { requiresPermission: "view-user" },
         component: () => import("@/views/dashboard/EmployeeList.vue"),
       },
       {
         path: "create-exam",
         name: "create-exam",
+        meta: { requiresPermission: "create-exams" },
         component: () => import("@/views/dashboard/CreateExams.vue"),
       },
       {
         path: "exams",
         name: "exams",
+        meta: { requiresPermission: "view-exams" },
         component: () => import("@/views/dashboard/AllExams.vue"),
       },
       {
         path: "instructors",
         name: "instructors",
+        meta: { requiresPermission: "view-instructors" },
         component: () => import("@/views/dashboard/InstructorList.vue"),
       },
       {
         path: "courses",
         name: "courses",
+        meta: { requiresPermission: "view-courses" },
         component: () => import("@/views/dashboard/CourseList.vue"),
       },
       {
         path: "scholarships",
         name: "scholarships",
+        meta: { requiresPermission: "view-scholarships" },
         component: () => import("@/views/dashboard/ScholarshipList.vue"),
       },
       {
         path: "exams/:id/edit",
         name: "edit-exam",
+        meta: { requiresPermission: "edit-exams" },
         component: () => import("@/views/dashboard/EditExam.vue"),
       },
       {
         path: "roles",
         name: "roles",
+        meta: { requiresPermission: "view-role" },
         component: () => import("@/views/dashboard/RoleList.vue"),
       },
     ],
@@ -91,18 +101,20 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
+  const userPermissions = authStore.permissions || [];
+  const access = accessControl[to.name];
 
-  if (to.meta.requiresPermission) {
-    const requiredPermission = to.meta.requiresPermission;
-
-    if (authStore.hasPermission(requiredPermission)) {
-      next();
-    } else {
-      next({ name: "SystemsPage" });
+  if (access) {
+    if (access.blockedIfHas?.some(p => userPermissions.includes(p))) {
+      return next({ name: "dashboard" });
     }
-  } else {
-    next();
+    if (access.requires?.some(p => !userPermissions.includes(p))) {
+      return next({ name: "SystemsPage" });
+    }
   }
+
+  next();
 });
+
 
 export default router;

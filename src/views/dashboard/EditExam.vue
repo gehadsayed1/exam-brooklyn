@@ -46,7 +46,7 @@
           <span v-else>Get Questions</span>
         </button>
 
-        <button v-if=" !showAdder" @click="handleAddQuestion" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 min-w-[140px]">
+        <button  v-if=" !showAdder || authStore.hasPermission('create-questions')" @click="handleAddQuestion" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 min-w-[140px]">
           + Add Question
         </button>
       </div>
@@ -82,7 +82,9 @@ import ExamInfoForm from "@/components/dashboard/ExamInfoForm.vue";
 import QuestionEditor from "@/components/dashboard/QuestionEditor.vue";
 import ExamQuestions from "@/components/dashboard/ExamQuestions.vue";
 import notyf from '@/components/global/notyf' 
+import { useAuthStore } from "@/stores/auth";
 
+const authStore = useAuthStore();
 const examStore = useExamStore();
 const route = useRoute();
 const emitter = inject('emitter')

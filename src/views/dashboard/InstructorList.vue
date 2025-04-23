@@ -4,13 +4,15 @@
       <h1 class="text-2xl font-bold text-gray-800">Instructor List</h1>
       <button
         @click="openAddModal"
+        v-if="authStore.hasPermission('create-instructors')"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
         + Add Instructor
       </button>
     </div>
 
-   
+  <div>
+     
     <div >
       <DataTable
         :headers="[
@@ -20,9 +22,11 @@
         ]"
         :items="filteredInstructors"
         :isInstructors="true"
+        resourceType="instructors"
         @edit="editInstructor"
         @delete="showDeleteAlert"
-        :loading="instructorStore.loading"
+      
+        
         :search="search"
       />
     </div>
@@ -49,6 +53,7 @@
       @cancel="cancelDelete"
     />
   </div>
+  </div>
 </template>
 
 <script setup>
@@ -57,13 +62,16 @@ import { useInstructorStore } from "@/stores/instructorStore";
 import DataTable from "@/components/dashboard/DataTable.vue";
 import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
 import Modal from "@/components/global/Modal.vue";
+import { useAuthStore } from "@/stores/auth";
 
+
+const authStore = useAuthStore();
 const instructorStore = useInstructorStore();
 const search = ref("");
 const showModal = ref(false);
 const saving = ref(false);
 const isEditing = ref(false);
-const formInstructor = ref({ id: null, name: "", phone: "" });
+const formInstructor = ref({  name: "", phone: "" , courses: [] });
 const showDeleteAlertDialog = ref(false);
 const itemToDelete = ref(null);
 
@@ -77,7 +85,7 @@ const filteredInstructors = computed(() => {
 
 const openAddModal = () => {
   isEditing.value = false;
-  formInstructor.value = { name: "", phone: ""  };
+  formInstructor.value = { name: "", phone: "" , courses: [] };
   showModal.value = true;
 };
 
@@ -100,15 +108,15 @@ const saveInstructor = async () => {
   saving.value = true;
   try {
     if (isEditing.value) {
-      await instructorStore.updateInstructor(formInstructor.value.id, {
-        name: formInstructor.value.name,
-        phone: formInstructor.value.phone,
-      });
+      formInstructor.value.courses = formInstructor.value.courses.map((course) => course.id);
+      await instructorStore.updateInstructor(formInstructor.value.id, formInstructor.value);
+      closeModal();
     } else {
-      await instructorStore.addInstructor({
-        name: formInstructor.value.name,
-        phone: formInstructor.value.phone,
-      });
+      console.log(formInstructor.value);
+      formInstructor.value.courses = formInstructor.value.courses.map((course) => course.id);
+
+      await instructorStore.addInstructor(formInstructor.value);
+      closeModal();
     }
   } catch (error) {
     console.error(error);
@@ -137,6 +145,8 @@ const cancelDelete = () => {
 };
 
 onMounted(() => {
+  saving.value = true;
   instructorStore.fetchInstructors();
+  saving.value = false;
 });
 </script>

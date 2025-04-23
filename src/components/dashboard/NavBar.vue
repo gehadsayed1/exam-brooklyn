@@ -11,11 +11,16 @@
       <router-link to="/systems" class="text-primary hover:text-blue-800">
         <HomeIcon class="w-6 h-6" />
       </router-link>
-      <div class="flex items-center gap-2 cursor-pointer">
-        <div class="text-gray-700 dark:text-gray-200 font-semibold text-sm flex items-center">
-          <strong>Welcome,</strong><span class="text-primary">({{ user?.name || 'Loading...' }})</span>
+      <div class="flex items-center  cursor-pointer">
+        <div class="text-gray-700 gap-2 dark:text-gray-200 font-semibold text-sm flex items-center">
+          <div>
+            <strong>Welcome,</strong>
+              <span class="font-semibold text-gray-700 dark:text-gray-200">{{
+                user.name
+              }}</span>
+          </div>
+              <UserIcon class="w-6 h-6 text-gray-700 dark:text-gray-200" />
         </div>
-        <img class="rounded-full w-8 h-8" src="../../assets/avatar-1.png" alt="User Avatar" />
       </div>
       <transition name="fade">
         <div v-if="isMenuOpen" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 
@@ -25,11 +30,18 @@
                      dark:hover:bg-gray-600" @click="closeMenu">
               My Profile
             </router-link>
-            <button class="w-full text-right  flex gap-2 items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 
-                     hover:bg-gray-100 dark:hover:bg-gray-600" @click="authStore.logout()">
-              <LogOut class="w-5 h-5" />
-              Logout
-            </button>
+            <button
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600 flex gap-2 items-center"
+                  @click="handleLogout"
+                >
+                  <span v-if="authStore.loading">
+                    <i class="fa-solid fa-circle-notch fa-spin-pulse"></i
+                  ></span>
+                  <span v-else class="flex items-center gap-2">
+                    <LogOutIcon class="w-4 h-4" />
+                    Logout
+                  </span>
+                </button>
           </div>
         </div>
       </transition>
@@ -39,7 +51,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { AlignLeft, HomeIcon, LogOut } from 'lucide-vue-next';
+import { AlignLeft, HomeIcon, LogOut, LogOutIcon, UserIcon } from 'lucide-vue-next';
 import { inject } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -54,7 +66,11 @@ const isMenuOpen = ref(false);
 
 
 
-
+const handleLogout = async () => {
+  await authStore.logout();
+  closeDropdown();
+  router.push({ name: "login" });
+};
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };

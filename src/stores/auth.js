@@ -4,7 +4,12 @@ import Cookies from "js-cookie";
 import { useRouter } from "vue-router";
 import notyf from "@/components/global/notyf";
 import apiClient from "../api/axiosInstance";
-import { FORGOT_PASSWORD, LOGIN, RESET_PASSWORD, USER_BY_TOKEN } from "../api/Api";
+import {
+  FORGOT_PASSWORD,
+  LOGIN,
+  RESET_PASSWORD,
+  USER_BY_TOKEN,
+} from "../api/Api";
 import CryptoJS from "crypto-js"; // تم إضافته
 
 export const useAuthStore = defineStore("authStore", () => {
@@ -16,15 +21,13 @@ export const useAuthStore = defineStore("authStore", () => {
   const router = useRouter();
   const permissions = ref([]);
 
-  const secretKey = "secret-key-123"; // حطي مفتاح سري ثابت للتشفير وفك التشفير
+  const secretKey = "secret-key-123";
 
-  // تشفير permissions
   const encryptPermissions = (perms) => {
     const stringified = JSON.stringify(perms);
     return CryptoJS.AES.encrypt(stringified, secretKey).toString();
   };
 
-  // فك التشفير
   const decryptPermissions = (encrypted) => {
     try {
       const bytes = CryptoJS.AES.decrypt(encrypted, secretKey);
@@ -44,7 +47,9 @@ export const useAuthStore = defineStore("authStore", () => {
     if (savedToken && savedUser) {
       token.value = savedToken;
       user.value = JSON.parse(decodeURIComponent(savedUser));
-      permissions.value = savedPermissions ? decryptPermissions(savedPermissions) : [];
+      permissions.value = savedPermissions
+        ? decryptPermissions(savedPermissions)
+        : [];
     }
   };
 
@@ -55,7 +60,7 @@ export const useAuthStore = defineStore("authStore", () => {
   const login = async (email, password) => {
     loading.value = true;
     error.value = null;
-
+    console.log(email, password);
     try {
       const response = await apiClient.post(LOGIN, { email, password });
       token.value = response.data.token;
@@ -77,9 +82,7 @@ export const useAuthStore = defineStore("authStore", () => {
   const logout = async () => {
     loading.value = true;
     try {
-      await apiClient.post("logout", {}, {
-        headers: { Authorization: `Bearer ${token.value}` },
-      });
+      await apiClient.post("logout");
       notyf.success("Logged out successfully");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -119,7 +122,7 @@ export const useAuthStore = defineStore("authStore", () => {
     try {
       const response = await apiClient.post(RESET_PASSWORD, form, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -146,9 +149,16 @@ export const useAuthStore = defineStore("authStore", () => {
       const response = await apiClient.get(USER_BY_TOKEN);
       user.value = response.data.User;
       permissions.value = response.data.permissions;
+      console.log(response.data);
 
-      Cookies.set("user", JSON.stringify(user.value), { expires: 7, path: "/" });
-      Cookies.set("permissions", encryptPermissions(permissions.value), { expires: 7, path: "/" });
+      Cookies.set("user", JSON.stringify(user.value), {
+        expires: 7,
+        path: "/",
+      });
+      Cookies.set("permissions", encryptPermissions(permissions.value), {
+        expires: 7,
+        path: "/",
+      });
     } catch (error) {
       console.error(error);
     }

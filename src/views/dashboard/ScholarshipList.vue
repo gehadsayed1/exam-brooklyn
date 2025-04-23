@@ -4,6 +4,7 @@
       <h1 class="text-2xl font-bold text-gray-800">Scholarships</h1>
       <button
         @click="toggleForm"
+        v-if="authStore.hasPermission('create-scholarship')"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
         + Add Scholarship
@@ -20,6 +21,7 @@
         ]"
         :items="filteredScholarships"
         :search="search"
+        resourceType="scholarship"
         @edit="editScholarship"
         @delete="confirmDelete"
         :loading="scholarshipStore.loading"
@@ -60,7 +62,10 @@ import { useScholarshipStore } from "@/stores/scholarships";
 import DataTable from "@/components/dashboard/DataTable.vue";
 import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
 import Modal from "@/components/global/Modal.vue";
+import { useAuthStore } from "@/stores/auth";
 
+
+const authStore = useAuthStore();
 const scholarshipStore = useScholarshipStore();
 const showModal = ref(false);
 const saving = ref(false);

@@ -18,6 +18,7 @@ export const useCourseStore = defineStore('courseStore', () => {
     try {
       const response = await apiClient.get(ALL_COURSES)
       courses.value = response.data.data
+    console.log(response.data.data);
     
     } catch (err) {
       error.value = 'Failed to fetch courses'

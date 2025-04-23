@@ -82,7 +82,7 @@ const isActive = computed(() => {
   return false;
 });
 
-// ✅ التنقل
+
 const toggle = () => {
   if (props.item.children) {
     open.value = !open.value;

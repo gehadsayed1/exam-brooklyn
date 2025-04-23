@@ -1,21 +1,27 @@
 <template>
   <div class="space-y-6 p-6">
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-800 mb-4">Employee List</h1>
+      <h1 class="text-2xl font-bold text-gray-800 mb-4">Users List</h1>
 
       <!-- Button to trigger modal -->
-      <button v-if="authStore.hasPermission('create-student')" @click="showForm = true" class="px-4 py-2 bg-indigo-500 cursor-pointer text-white rounded hover:bg-indigo-600">
-        Create New Employee
+      <button
+        v-if="authStore.hasPermission('create-user')"
+        @click="showForm = true"
+        class="px-4 py-2 bg-indigo-500 cursor-pointer text-white rounded hover:bg-indigo-600"
+      >
+        Create New User
       </button>
     </div>
     <div>
-      <DataTable :headers="[
-        { label: 'Employee Name', key: 'name' },
-        { label: 'Roles', key: 'roles' },
-      ]" 
-      :items="employeesStore.employees" 
-      :isEmployee="true" 
-      :loading="employeesStore.loading"
+      <DataTable
+        :headers="[
+          { label: 'User Name', key: 'name' },
+          { label: 'Roles', key: 'roles' },
+        ]"
+        :items="employeesStore.employees"
+        :isEmployee="true"
+        resourceType="user"
+       
         @delete="showDeleteAlert"
         @edit="editEmployee"
       />
@@ -42,10 +48,14 @@
     </div>
 
     <!-- Modal for Login Form -->
-    <div v-if="showForm"
-      class="fixed inset-0 bg-[rgba(0,0,0,0.6)] bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showForm"
+      class="fixed inset-0 bg-[rgba(0,0,0,0.6)] bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white p-8 relative rounded-lg shadow-lg max-w-md w-full">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Create New Employee</h2>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+          Create New User
+        </h2>
 
         <form @submit.prevent="handleLogin">
           <div class="field-wrapper dark:text-white text-gray-400">
@@ -65,10 +75,19 @@
 
           <div class="field-wrapper dark:text-white text-gray-400">
             <div class="relative">
-              <input :type="showPassword ? 'text' : 'password'" v-model="form.password" placeholder=" " />
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="form.password"
+                placeholder=" "
+              />
               <label>Password</label>
-              <span class="toggle-password" @click="showPassword = !showPassword">
-                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              <span
+                class="toggle-password"
+                @click="showPassword = !showPassword"
+              >
+                <i
+                  :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                ></i>
               </span>
             </div>
             <p v-if="errors.password" class="text-red-500 text-sm mt-1">
@@ -77,10 +96,19 @@
           </div>
           <div class="field-wrapper dark:text-white text-gray-400">
             <div class="relative">
-              <input :type="showPassword ? 'text' : 'password'" v-model="form.password_confirmation" placeholder=" " />
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="form.password_confirmation"
+                placeholder=" "
+              />
               <label>Confirm Password</label>
-              <span class="toggle-password" @click="showPassword = !showPassword">
-                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              <span
+                class="toggle-password"
+                @click="showPassword = !showPassword"
+              >
+                <i
+                  :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                ></i>
               </span>
             </div>
             <p v-if="errors.password" class="text-red-500 text-sm mt-1">
@@ -97,11 +125,17 @@
             </button>
           </div>
 
-          <p v-if="employeesStore.error" class="text-red-500 text-sm mt-2 text-center">
+          <p
+            v-if="employeesStore.error"
+            class="text-red-500 text-sm mt-2 text-center"
+          >
             {{ employeesStore.error }}
           </p>
         </form>
-        <button class="absolute top-2 hover:text-gray-500 cursor-pointer right-2" @click="showForm = false">
+        <button
+          class="absolute top-2 hover:text-gray-500 cursor-pointer right-2"
+          @click="showForm = false"
+        >
           <X />
         </button>
       </div>
@@ -110,13 +144,13 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-import SweetAlert2Modal from '@/components/global/SweetAlert2Modal.vue';
-import Modal from '@/components/global/Modal.vue';
-import { useEmployeeStore } from '@/stores/employeesStore';
-import DataTable from '@/components/dashboard/DataTable.vue';
-import { X } from 'lucide-vue-next';
-import { useAuthStore } from '@/stores/auth';
+import { onMounted, ref } from "vue";
+import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
+import Modal from "@/components/global/Modal.vue";
+import { useEmployeeStore } from "@/stores/employeesStore";
+import DataTable from "@/components/dashboard/DataTable.vue";
+import { X } from "lucide-vue-next";
+import { useAuthStore } from "@/stores/auth";
 
 const employeesStore = useEmployeeStore();
 const authStore = useAuthStore(); // Assuming you have an auth store to manage authentication
@@ -130,22 +164,22 @@ const showPassword = ref(false);
 const isLoading = ref(false);
 const itemToDelete = ref(null);
 const formEmployee = ref({
-  name: '',
-  email: '',
+  name: "",
+  email: "",
   roles: [], // Initialize as an empty array
 });
 const form = ref({
-  name: '',
-  email: '',
-  password: '',
-  password_confirmation: ''
+  name: "",
+  email: "",
+  password: "",
+  password_confirmation: "",
 });
 
 const errors = ref({
-  name: '',
-  email: '',
-  password: '',
-  password_confirmation: ''
+  name: "",
+  email: "",
+  password: "",
+  password_confirmation: "",
 });
 
 const showDeleteAlert = (id) => {
@@ -167,11 +201,12 @@ const cancelDelete = () => {
 };
 
 const editEmployee = (employees) => {
-    isEditing.value = true;
-    
-    formEmployee.value = { ...employees };
-    showModal.value = true;
-  };
+  isEditing.value = true;
+console.log(employees);
+
+  formEmployee.value = { ...employees };
+  showModal.value = true;
+};
 const closeModal = () => {
   showModal.value = false;
   isEditing.value = false;
@@ -186,12 +221,18 @@ const saveEmployee = async () => {
   saving.value = true;
   try {
     if (isEditing.value) {
-      formEmployee.value.roles = formEmployee.value.roles.map(role => role.id); // Ensure roles are saved as IDs
-      await employeesStore.updateEmployee(formEmployee.value.id, formEmployee.value);
+      formEmployee.value.roles = formEmployee.value.roles.map(
+        (role) => role.id
+      ); // Ensure roles are saved as IDs
+      await employeesStore.updateEmployee(
+        formEmployee.value.id,
+        formEmployee.value
+      );
       closeModal();
     } else {
       await employeesStore.addEmployee(formEmployee.value);
-      showModal.value = false;
+      closeModal();
+      
     }
   } catch (error) {
     console.error(error);
@@ -202,7 +243,12 @@ const saveEmployee = async () => {
 };
 
 async function handleLogin() {
-  errors.value = { email: '', password: '', name: '', password_confirmation: '' };
+  errors.value = {
+    email: "",
+    password: "",
+    name: "",
+    password_confirmation: "",
+  };
 
   isLoading.value = true;
 
@@ -246,7 +292,7 @@ body {
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.6s ease-in-out;
-  transform: rotateY(0deg)
+  transform: rotateY(0deg);
 }
 
 .face {
@@ -288,8 +334,8 @@ body {
   outline: none;
 }
 
-.field-wrapper input:focus+label,
-.field-wrapper input:not(:placeholder-shown)+label {
+.field-wrapper input:focus + label,
+.field-wrapper input:not(:placeholder-shown) + label {
   top: -12px;
   font-size: 0.75em;
   color: #42509e;

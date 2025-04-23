@@ -21,16 +21,13 @@ const errors = ref({
 
 // reset password form
 
-
-
 // forgot password form
 const forgotEmail = ref("");
 const isResetting = ref(false);
 const forgotError = ref("");
 
-
 if (Cookies.get("token")) {
-  router.push({ name: "examPage"});
+  router.push({ name: "examPage" });
 }
 
 // yup schema
@@ -53,7 +50,6 @@ function showForgotPassword() {
   prism.value.style.transform = "rotateY(180deg)";
 }
 
-
 async function handleLogin() {
   errors.value = { email: "", password: "" };
   isLoading.value = true;
@@ -64,6 +60,8 @@ async function handleLogin() {
       { abortEarly: false }
     );
     await auth.login(email.value, password.value);
+    email.value = "";
+    password.value = "";
   } catch (validationError) {
     if (validationError.inner) {
       validationError.inner.forEach((err) => {
@@ -78,11 +76,10 @@ async function handleLogin() {
 async function handleForgotPassword() {
   forgotError.value = "";
   isResetting.value = true;
-console.log("forgotEmail.value", forgotEmail.value);
+  console.log("forgotEmail.value", forgotEmail.value);
 
   await auth.forgotPassword(forgotEmail.value);
   isResetting.value = false;
-
 
   // // simulate request
   // setTimeout(() => {
@@ -105,7 +102,7 @@ console.log("forgotEmail.value", forgotEmail.value);
   </ul>
 
   <div class="wrapper">
-    <div class="rec-prism mb-8 " ref="prism">
+    <div class="rec-prism mb-8" ref="prism">
       <!-- Login -->
       <div
         class="face face-front dark:bg-gray-600 shadow shadow-blue-500 bg-white"
@@ -184,12 +181,12 @@ console.log("forgotEmail.value", forgotEmail.value);
             <div class="field-wrapper dark:text-white text-gray-400">
               <input type="text" v-model="forgotEmail" placeholder=" " />
               <label>e-mail</label>
-               <!-- <p v-if="forgotError" class="text-red-500 text-sm mt-1">
+              <!-- <p v-if="forgotError" class="text-red-500 text-sm mt-1">
                 {{ forgotError }}
               </p> -->
               <p v-if="auth.forgotSuccess" class="text-green-600 text-sm mt-1">
                 {{ auth.forgotSuccess }}
-              </p> 
+              </p>
             </div>
 
             <div class="field-wrapper">
@@ -238,7 +235,7 @@ body {
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.6s ease-in-out;
-  transform: rotateY(0deg)
+  transform: rotateY(0deg);
 }
 
 .face {
@@ -250,7 +247,6 @@ body {
   border-radius: 6px;
   backface-visibility: hidden;
 }
-
 
 .face-back {
   transform: rotateY(0deg); /* front */

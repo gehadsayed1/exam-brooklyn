@@ -17,6 +17,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
     try {
       const response = await apiClient.get(ALL_INSTRUCTORS);
       instructors.value = response.data.data;
+      loading.value = false;
     } catch (err) {
       error.value = "Failed to fetch instructors";
       notyf.error(error.value);

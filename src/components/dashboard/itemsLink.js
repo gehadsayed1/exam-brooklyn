@@ -2,9 +2,9 @@ import { BookOpenCheck, PlusCircle, Settings, Users, FileText, GraduationCap, Sh
 
 export const items = [
   {
-    name: 'Employees',
+    name: 'Users',
     icon: UserCog,
-    route: 'employees'
+    route: 'users'
   },
   {
     name: 'Exams',
@@ -25,7 +25,7 @@ export const items = [
     route: 'instructors'
   },
   {
-    name: 'Scholarships',
+    name: 'Scholarships', 
     icon: GraduationCap,  
     route: 'scholarships'
   },
