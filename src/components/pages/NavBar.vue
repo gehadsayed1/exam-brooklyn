@@ -20,7 +20,7 @@
               @click="toggleDropdown"
             >
               <strong>Welcome,</strong>
-              <span class="font-semibold text-gray-700 dark:text-gray-200">{{
+              <span v-if="user.name" class="font-semibold text-gray-700 dark:text-gray-200">{{
                 user.name
               }}</span>
               <UserIcon class="w-6 h-6 text-gray-700 dark:text-gray-200" />

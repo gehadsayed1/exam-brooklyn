@@ -102,21 +102,26 @@ const editScholarship = (scholarship) => {
 
 const saveScholarship = async () => {
   saving.value = true;
+
+  const payload = {
+    ...form.value,
+    courses: form.value.courses?.map((course) => course.id),
+  };
+
   try {
     if (isEditing.value) {
-      form.value.courses = form.value.courses.map((course) => course.id);
-      await scholarshipStore.updateScholarship(form.value.id, form.value);
+      await scholarshipStore.updateScholarship(form.value.id, payload);
     } else {
-      form.value.courses = form.value.courses.map((course) => course.id);
-      await scholarshipStore.addScholarship(form.value);
+      await scholarshipStore.addScholarship(payload);
     }
+    closeModal();
   } catch (error) {
     console.error(error);
   } finally {
     saving.value = false;
-    closeModal();
   }
 };
+
 
 const confirmDelete = (id) => {
   showDeleteAlert.value = true;

@@ -107,22 +107,25 @@ const editCourse = (course) => {
 
 const saveCourse = async () => {
   saving.value = true;
-  form.value.code = String(form.value.code);
+
+  const payload = {
+    ...form.value,
+    code: String(form.value.code),
+    scholarship: form.value.scholarship?.map((s) => s.id),
+    instructor: form.value.instructor?.map((i) => i.id),
+  };
+
   try {
     if (isEditing.value) {
-      form.value.scholarship = form.value.scholarship.map((s) => s.id);
-      form.value.instructor = form.value.instructor.map((s) => s.id);
-      await courseStore.updateCourse(form.value.id, form.value);
+      await courseStore.updateCourse(form.value.id, payload);
     } else {
-      form.value.scholarship = form.value.scholarship.map((s) => s.id);
-      form.value.instructor = form.value.instructor.map((s) => s.id);
-      await courseStore.addCourse(form.value);
+      await courseStore.addCourse(payload);
     }
+    closeModal();
   } catch (error) {
     console.error(error);
   } finally {
     saving.value = false;
-    closeModal();
   }
 };
 

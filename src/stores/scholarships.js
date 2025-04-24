@@ -15,6 +15,8 @@ export const useScholarshipStore = defineStore("scholarshipStore", () => {
     try {
       const response = await apiClient.get(ALL_SCHOLARSHIPS);
       scholarships.value = response.data.data;
+      console.log(response.data.data);
+      
     }  catch (err) {
       if (err.response && err.response.data) {
         const errorMessage = err.response.data.message || "An error occurred";

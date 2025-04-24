@@ -101,9 +101,24 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
+  const isAuthenticated = !!authStore.token; 
   const userPermissions = authStore.permissions || [];
   const access = accessControl[to.name];
 
+ 
+  if (to.path === "/" && isAuthenticated) {
+    return next({ name: "SystemsPage" });
+  }
+
+  
+  const publicPages = ["login", "password-reset", "error"];
+  const authRequired = !publicPages.includes(to.name);
+
+  if (authRequired && !isAuthenticated) {
+    return next({ name: "login" });
+  }
+
+ 
   if (access) {
     if (access.blockedIfHas?.some(p => userPermissions.includes(p))) {
       return next({ name: "dashboard" });
@@ -115,6 +130,7 @@ router.beforeEach((to, from, next) => {
 
   next();
 });
+
 
 
 export default router;

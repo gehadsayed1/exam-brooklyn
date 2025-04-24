@@ -106,25 +106,28 @@ const closeModal = () => {
 
 const saveInstructor = async () => {
   saving.value = true;
+
+  const payload = {
+    ...formInstructor.value,
+    courses: formInstructor.value.courses?.map((course) => course.id),
+  };
+
   try {
     if (isEditing.value) {
-      formInstructor.value.courses = formInstructor.value.courses.map((course) => course.id);
-      await instructorStore.updateInstructor(formInstructor.value.id, formInstructor.value);
-      closeModal();
+      console.log(payload);
+      await instructorStore.updateInstructor(formInstructor.value.id, payload);
     } else {
-      console.log(formInstructor.value);
-      formInstructor.value.courses = formInstructor.value.courses.map((course) => course.id);
-
-      await instructorStore.addInstructor(formInstructor.value);
-      closeModal();
+      console.log(payload);
+      await instructorStore.addInstructor(payload);
     }
+    closeModal();
   } catch (error) {
     console.error(error);
   } finally {
     saving.value = false;
-    closeModal();
   }
 };
+
 
 const showDeleteAlert = (id) => {
   showDeleteAlertDialog.value = true;

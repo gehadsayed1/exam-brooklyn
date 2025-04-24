@@ -14,10 +14,12 @@
       <div class="flex items-center  cursor-pointer">
         <div class="text-gray-700 gap-2 dark:text-gray-200 font-semibold text-sm flex items-center">
           <div>
-            <strong>Welcome,</strong>
-              <span class="font-semibold text-gray-700 dark:text-gray-200">{{
-                user.name
-              }}</span>
+            <strong>Welcome, </strong>
+              <span v-if="user.name" class="font-semibold text-gray-700 dark:text-gray-200">
+                
+           {{ user.name }}
+
+              </span>
           </div>
               <UserIcon class="w-6 h-6 text-gray-700 dark:text-gray-200" />
         </div>
@@ -54,9 +56,11 @@ import { ref, computed } from 'vue';
 import { AlignLeft, HomeIcon, LogOut, LogOutIcon, UserIcon } from 'lucide-vue-next';
 import { inject } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 
 
 const authStore = useAuthStore();
+const router = useRouter()
 
 const user = computed(() => authStore.user);
 const emitter = inject('emitter');
@@ -68,7 +72,6 @@ const isMenuOpen = ref(false);
 
 const handleLogout = async () => {
   await authStore.logout();
-  closeDropdown();
   router.push({ name: "login" });
 };
 const toggleMenu = () => {

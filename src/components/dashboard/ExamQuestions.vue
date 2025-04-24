@@ -20,6 +20,15 @@
 
       <!-- Question Form -->
       <div class="border p-4 rounded space-y-3 relative">
+        <!-- Delete Button -->
+        <button
+          v-if="questions.length > 1"
+          @click="deleteQuestion(currentQuestionIndex)"
+          class="absolute top-2 right-2  text-red-800 rounded-full w-6 h-6 flex items-center cursor-pointer font-bold justify-center hover:text-red-500"
+        >
+          ✕
+        </button>
+
         <div>
           <label class="text-sm font-medium text-gray-700">Question Text</label>
           <input v-model="questions[currentQuestionIndex].question_text" type="text" class="w-full border bg-primary text-xl text-gray-50 px-5 py-3 rounded-md" />
@@ -63,9 +72,7 @@
 <script setup>
 import { ref, inject } from 'vue'
 
-const emitter = inject('emitter')
 
-// Local state for questions
 const questions = ref([{
   question_text: '',
   option_a: '',
@@ -73,61 +80,71 @@ const questions = ref([{
   option_c: '',
   option_d: '',
   correct_option: 'A'
-}])  // Start with a single empty question
+}])
 
-// State for the current question index
 const currentQuestionIndex = ref(0)
-
-// Error message state
 const errorMessage = ref(false)
 
-// Function to add a new question
-const addQuestion = () => {
-  // Get the current question fields
-  const currentQuestion = questions.value[currentQuestionIndex.value]
+// ✅ دالة ترجع كل الأسئلة المكتملة
+const getQuestions = () => {
+  const allQuestions = questions.value
 
-  // Check if all fields are filled
+  // تحقق أن آخر سؤال مكتمل
+  const last = allQuestions[allQuestions.length - 1]
   if (
-    !currentQuestion.question_text ||
-    !currentQuestion.option_a ||
-    !currentQuestion.option_b ||
-    !currentQuestion.option_c ||
-    !currentQuestion.option_d ||
-    !currentQuestion.correct_option
+    !last.question_text ||
+    !last.option_a ||
+    !last.option_b ||
+    !last.option_c ||
+    !last.option_d ||
+    !last.correct_option
   ) {
     errorMessage.value = true
-    return
+    return null
   }
 
-  // Clear the error message and add the question
   errorMessage.value = false
 
-  // Filter out the incomplete questions before sending
-  const validQuestions = questions.value.filter((question) => {
-    return (
-      question.question_text &&
-      question.option_a &&
-      question.option_b &&
-      question.option_c &&
-      question.option_d
-    );
-  });
+ 
+  return allQuestions.filter(q =>
+    q.question_text && q.option_a && q.option_b && q.option_c && q.option_d && q.correct_option
+  )
+}
 
-  // Only emit valid questions
-  emitter.emit('questions', validQuestions);
-  const newQuestion = {
+
+const emitter = inject('emitter')
+
+const addQuestion = () => {
+  const validQuestions = getQuestions()
+  if (!validQuestions) return
+
+ 
+  emitter?.emit('questions', validQuestions)
+
+  questions.value.push({
     question_text: '',
     option_a: '',
     option_b: '',
     option_c: '',
     option_d: '',
     correct_option: 'A'
-  };
+  })
 
-  questions.value.push(newQuestion);
-  currentQuestionIndex.value = questions.value.length - 1;
+  currentQuestionIndex.value = questions.value.length - 1
 }
+
+
+const deleteQuestion = (index) => {
+  if (questions.value.length > 1) {
+    questions.value.splice(index, 1)
+    currentQuestionIndex.value = Math.max(0, currentQuestionIndex.value - 1)
+  }
+}
+
+
+defineExpose({ getQuestions })
 </script>
+
 
 <style scoped>
 /* Custom styles if needed */

@@ -4,7 +4,7 @@ import thank from "../../assets/thank.png";
 
 
 const redirectToHome = () => {
-  window.location.replace('/home'); 
+  window.location.replace('/'); 
 };
 
 // Force redirect to home when back button is pressed

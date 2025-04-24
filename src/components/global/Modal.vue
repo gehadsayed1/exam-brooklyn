@@ -72,7 +72,7 @@
           <multiselect v-model="form.courses" :options="courses" track-by="id" label="name" multiple
             placeholder="Select Courses"
             class="w-full border border-gray-200 bg-white outline-0 shadow-2xl shadow-gray-200 rounded-md px-3 py-2"
-            :reduce="(selected) => selected.id" />
+            />
         </div>
 
         <div v-if="isEmployee" class="relative w-[95%]">
@@ -141,8 +141,6 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(["closeModal", "saveData", "delete"]);
 
-// Internal state
-const deleting = ref(false);
 const originalForm = ref({ ...props.form });
 
 // Fetching data from the stores
@@ -185,12 +183,13 @@ const isSaveButtonDisabled = computed(() => {
     JSON.stringify(form.instructor ?? []) !== JSON.stringify(original.instructor ?? []);
 
   const isScholarshipsChanged =
-    props.isCourse &&
+    props.isScholarship &&
     JSON.stringify(form.scholarship ?? []) !== JSON.stringify(original.scholarship ?? []);
 
-  const isCoursesChanged =
-    props.isScholarship &&
-    JSON.stringify(form.courses ?? []) !== JSON.stringify(original.courses ?? []);
+    const isCoursesChanged =
+  (props.isCourse || props.isScholarship || props.isInstructor) &&
+  JSON.stringify(form.courses ?? []) !== JSON.stringify(original.courses ?? []);
+
 
   const isRolesChanged =
     props.isEmployee &&
@@ -241,15 +240,13 @@ const formErrors = computed(() => {
 
 
 
-// Delete button state
-const isDeleteButtonDisabled = computed(() => deleting.value);
 
 
 
 // Initialize the stores when the component is mounted
 onMounted(() => {
-  props.isScholarship && scholarshipStore.fetchScholarships();
-  props.isInstructor && instructorStore.fetchInstructors();
+  props.isScholarship || props.isCourse && scholarshipStore.fetchScholarships();
+  props.isInstructor || props.isCourse && instructorStore.fetchInstructors();
   props.isCourse || props.isInstructor && courseStore.fetchCourses();
   props.isEmployee && rolesStore.fetchRoles();
   props.isRole && rolesStore.fetchPermissions();

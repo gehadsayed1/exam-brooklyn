@@ -219,28 +219,26 @@ onMounted(() => {
 
 const saveEmployee = async () => {
   saving.value = true;
+
+  const payload = {
+    ...formEmployee.value,
+    roles: formEmployee.value.roles?.map((role) => role.id),
+  };
+
   try {
     if (isEditing.value) {
-      formEmployee.value.roles = formEmployee.value.roles.map(
-        (role) => role.id
-      ); // Ensure roles are saved as IDs
-      await employeesStore.updateEmployee(
-        formEmployee.value.id,
-        formEmployee.value
-      );
-      closeModal();
+      await employeesStore.updateEmployee(formEmployee.value.id, payload);
     } else {
-      await employeesStore.addEmployee(formEmployee.value);
-      closeModal();
-      
+      await employeesStore.addEmployee(payload);
     }
+    closeModal();
   } catch (error) {
     console.error(error);
   } finally {
     saving.value = false;
-    closeModal();
   }
 };
+
 
 async function handleLogin() {
   errors.value = {

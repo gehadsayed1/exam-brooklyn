@@ -39,17 +39,18 @@ const systems = [
     name: "Exams Portal",
     route: "/home",
     image: onetask,
+    requiresPermission: "create-exams",
   },
   {
     name: "One Task System",
     link: "https://www.1task.net/",
     image: "https://ik.imagekit.io/ts7pphpbz3/Subheading%20(1)%20(1).png?updatedAt=1730567921316",
   },
-  {
-    name: "SMR Platform",
-    link: "https://smr-system.example.com",
-    image: "https://cdn-icons-png.flaticon.com/512/2541/2541988.png",
-  },
+  // {
+  //   name: "SMR Platform",
+  //   link: "https://smr-system.example.com",
+  //   image: "https://cdn-icons-png.flaticon.com/512/2541/2541988.png",
+  // },
   {
     name: "Dashboard",
     route: "/dashboard",

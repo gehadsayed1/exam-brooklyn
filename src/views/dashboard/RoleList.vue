@@ -35,7 +35,7 @@
       :saving="saving"
       :isRole="true"
       @closeModal="closeModal"
-      @saveData="saveInstructor"
+      @saveData="saveRole"
     />
 
     <!-- SweetAlert2 Modal for Confirmation -->
@@ -87,28 +87,28 @@ const closeModal = () => {
   isEditing.value = false;
   saving.value = false;
 };
-
-const saveInstructor = async () => {
+const saveRole = async () => {
   saving.value = true;
+
+  const payload = {
+    ...formRoles.value,
+    permissions: formRoles.value.permissions?.map((pre) => pre.id),
+  };
+
   try {
     if (isEditing.value) {
-      formRoles.value.permissions = formRoles.value.permissions.map(
-        (pre) => pre.id
-      );
-      await rolesStore.updateRole(formRoles.value.id, formRoles.value);
+      await rolesStore.updateRole(formRoles.value.id, payload);
     } else {
-      formRoles.value.permissions = formRoles.value.permissions.map(
-        (pre) => pre.id
-      );
-      await rolesStore.addRole(formRoles.value);
+      await rolesStore.addRole(payload);
     }
+    closeModal();
   } catch (error) {
     console.error(error);
   } finally {
     saving.value = false;
-    closeModal();
   }
 };
+
 
 const showDeleteAlert = (id) => {
   showDeleteAlertDialog.value = true;

@@ -26,9 +26,7 @@ const forgotEmail = ref("");
 const isResetting = ref(false);
 const forgotError = ref("");
 
-if (Cookies.get("token")) {
-  router.push({ name: "examPage" });
-}
+
 
 // yup schema
 const schema = yup.object().shape({

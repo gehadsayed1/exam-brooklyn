@@ -41,19 +41,24 @@ export const useExamStore = defineStore("examStore", () => {
       exams.value.push(response.data);
       router.push({ name: "exams" });
     } catch (err) {
-      
-      if (Array.isArray(err)) {
-        err.forEach((e) => {
+      if (Array.isArray(err?.response?.data?.error)) {
+        err.response.data.error.forEach((e) => {
           notyf.error(e.message || "Failed to create exam");
         });
       } else {
-        error.value = "Failed to create exam";
-        notyf.error(error.value);
+        const message =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err.message ||
+          "Failed to create exam";
+        notyf.error(message);
       }
+    
       console.error(err);
-    } finally {
-      loading.value = false;
     }
+    finally {
+      loading.value = false;
+    }    
   };
   
 

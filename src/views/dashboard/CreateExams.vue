@@ -15,6 +15,7 @@ const examStore = useExamStore();
 const isAdding = ref(false);
 const emitter = inject("emitter");
 const scholarshipStore = useScholarshipStore();
+const questionForm = ref()
 
 
 onMounted(() => {
@@ -68,11 +69,20 @@ const validate = () => {
 };
 
 const submitExam = async () => {
+  const questions = questionForm.value.getQuestions();
+  if (!questions) return;
+
   submitting.value = true;
+
   try {
+    
+    exam.value.questions = questions;
+
     console.log(exam.value);
 
     await examStore.addExam(exam.value);
+
+    
     exam.value = {
       name: "",
       description: "",
@@ -82,12 +92,15 @@ const submitExam = async () => {
       is_active: true,
       questions: [],
     };
+
+  
   } catch (error) {
     notyf.error("Failed to create exam.");
   } finally {
     submitting.value = false;
   }
 };
+
 </script>
 
 <template>
@@ -131,7 +144,7 @@ const submitExam = async () => {
     <!-- Questions Component -->
     <ExamQuestions
       v-show="isAdding"
-      ref="examQuestionsRef"
+      ref="questionForm"
       v-model="exam.questions"
       :questions="exam.questions"
       @update:questions="exam.questions = $event"

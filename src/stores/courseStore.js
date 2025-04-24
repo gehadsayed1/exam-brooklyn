@@ -40,28 +40,38 @@ export const useCourseStore = defineStore('courseStore', () => {
       
       notyf.success('Course added successfully')
     } catch (err) {
+    
+        console.error(err);
       
-      console.error(err)
-      err.data.errors.forEach((error) => {
-        notyf.error(error.message)
-      })
-      loading.value = false
-    }
+        const errors = err?.response?.data?.errors;
+      
+        if (Array.isArray(errors)) {
+          errors.forEach((error) => {
+            notyf.error(error.message || 'حدث خطأ');
+          });
+        } else {
+          
+          const singleMessage = err?.response?.data?.message || err?.message || 'حدث خطأ غير متوقع';
+          notyf.error(singleMessage);
+        }
+      }
+      
+     
   }
   
 
   const updateCourse = async (id, updatedData) => {
+    console.log(id, updatedData);
+    
     try {
       const response = await apiClient.put(`${ALL_COURSES}/${id}`, updatedData);
+      console.log(response.data.data);
   
-      // Find the course by id and update it in the array
-      const index = courses.value.findIndex(course => course.id === id);
-      if (index !== -1) {
+     
+   
         // Update the course at the found index
-        courses.value[index] = response.data.data;
-      } else {
-        console.error("Course not found");
-      }
+        courses.value.push(response.data.data);
+   
   
       notyf.success('Course updated successfully');
     } catch (err) {
