@@ -19,7 +19,7 @@
           {{ confirmButtonText }}
         </button>
       </div>
-      <button @click="onCancel" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl">×</button>
+
     </div>
   </div>
 </template>

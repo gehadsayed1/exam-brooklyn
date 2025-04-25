@@ -217,6 +217,23 @@ onMounted(() => {
   employeesStore.fetchEmployees();
 });
 
+const closeLogin = () => {
+  showForm.value = false;
+  form.value = {
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  };
+  errors.value = {
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  };
+};
+
+
 const saveEmployee = async () => {
   saving.value = true;
 
@@ -228,8 +245,10 @@ const saveEmployee = async () => {
   try {
     if (isEditing.value) {
       await employeesStore.updateEmployee(formEmployee.value.id, payload);
+      showForm.value = false;
     } else {
       await employeesStore.addEmployee(payload);
+      closeLogin();
     }
     closeModal();
   } catch (error) {

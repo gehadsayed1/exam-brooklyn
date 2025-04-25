@@ -17,10 +17,13 @@
       <DataTable
         :headers="[
           { label: 'Course Name', key: 'name' },
-          { label: 'Course Code', key: 'code' }
+          { label: 'Course Code', key: 'code' },
+          { label: 'Instructor', key: 'instructor' },
+       
         ]"
         :items="filteredCourses"
         resourceType="courses"
+        isCourse="true"
         @edit="editCourse"
         @delete="confirmDelete"
         

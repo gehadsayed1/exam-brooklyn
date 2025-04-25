@@ -1,12 +1,12 @@
 <template>
     <div
-     v-if="(isExam || isInstructors || isEmployee) && Object.keys(selectedExam).length"
+     v-if="(isExam || isInstructors || isEmployee || isCourse) && Object.keys(selectedExam).length"
       class="fixed inset-0 bg-[rgba(0,0,0,0.6)] bg-opacity-50 flex items-center justify-center z-50 transition-all duration-300 ease-in-out"
     >
       <div class="bg-white relative p-8 rounded-lg shadow-2xl max-w-lg w-full transform transition-all duration-500 ease-in-out scale-95 hover:scale-100">
         <!-- Modal Header -->
         <div class="mb-6">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ isExam && 'Exam' || isInstructors && 'Instructor'|| isEmployee && 'Employee' }} Details</h2>
+          <h2 class="text-2xl font-semibold text-gray-800 mb-2">{{ isExam && 'Exam' || isInstructors && 'Instructor'|| isEmployee && 'Employee' || isCourse && 'Course' }} Details</h2>
           <div class="border-b-2 border-gray-300 mb-4"></div>
         </div>
   
@@ -46,6 +46,15 @@
             <strong class="text-primary font-medium">Created At:</strong> {{ formatDate(selectedExam.created_at) }}
           </p>
         </div>
+
+        <div v-if="isCourse">
+          <p class="text-gray-700 text-sm mb-2">
+            <strong class="text-primary font-medium">Scholarship:</strong> {{ selectedExam.scholarship && selectedExam.scholarship.filter((scholarship) => scholarship.name).map((scholarship) => `(${scholarship.name})`).join(', ')  || "No Scholarship" }}
+          </p>
+        
+        </div>
+
+
   
         <!-- Modal Footer -->
         <div class="mt-6 flex justify-end">
@@ -76,6 +85,10 @@
       required: true
     },
     isEmployee : {
+      type: Boolean,
+      required: true
+    },
+    isCourse : {
       type: Boolean,
       required: true
     }

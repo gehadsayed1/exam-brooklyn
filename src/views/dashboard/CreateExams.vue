@@ -57,16 +57,7 @@ const errors = ref({
 
 console.log(exam.value.ins_id);
 
-const validate = () => {
-  errors.value = {
-    name: exam.value.name ? "" : "Exam name is required",
-    duration: exam.value.duration > 0 ? "" : "Duration must be greater than 0",
-    ins_id: exam.value.ins_id ? "" : "Please select an instructor",
-    crs_id: exam.value.crs_id ? "" : "Please select a course",
-  };
 
-  return Object.values(errors.value).every((e) => e === "");
-};
 
 const submitExam = async () => {
   const questions = questionForm.value.getQuestions();
@@ -95,6 +86,8 @@ const submitExam = async () => {
 
   
   } catch (error) {
+    isAdding.value = false;
+    
     notyf.error("Failed to create exam.");
   } finally {
     submitting.value = false;
@@ -135,7 +128,12 @@ const submitExam = async () => {
         v-if="authStore.hasPermission('create-questions')"
         v-show="!isAdding"
         @click="isAdding = true"
-        class="bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 cursor-pointer flex items-center gap-2 min-w-[140px]"
+        :disabled="!isFormValid"
+        :class="[
+          'bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 cursor-pointer flex items-center gap-2 min-w-[140px]',
+          !isFormValid ? 'opacity-50 cursor-not-allowed' : '',
+        ]"
+      
       >
         + Add Question
       </button>
@@ -161,7 +159,7 @@ const submitExam = async () => {
             : 'bg-primary text-white hover:bg-[#063585]',
         ]"
       >
-        <span v-if="submitting" class="loader"></span>
+        <span v-if="submitting" class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
         <span v-else>Submit</span>
       </button>
     </div>

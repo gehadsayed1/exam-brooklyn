@@ -87,7 +87,7 @@ export const useRoleStore = defineStore("roleStore", () => {
     } 
   };
 
-  // حذف دور
+
   const deleteRole = async (roleId) => {
     error.value = null;
     try {
