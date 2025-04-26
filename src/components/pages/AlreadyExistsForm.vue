@@ -92,7 +92,7 @@ console.log(studentStore.studentOTP);
           />
           <input
             v-model="studentStore.studentId"
-            :disabled="studentStore.otpSent || studentStore.studentId !== ''"
+            :disabled="studentStore.otpSent"
             type="text"
             id="name-input"
             placeholder="Enter Your ID"

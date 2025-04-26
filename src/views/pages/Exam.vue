@@ -186,6 +186,7 @@ const submitFinalExam = async () => {
 
     if (unansweredQuestionIndexes.length > 0) {
       unansweredIndexes.value = unansweredQuestionIndexes.map((n) => n - 1);
+
       showUnansweredMessage.value = `Please answer all questions.`;
       mode.value = "filter";
       currentQuestionIndex.value = unansweredIndexes.value[0];
@@ -224,7 +225,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="quiz-container min-h-screen">
+  <div class="quiz-container min-h-screen w-full">
     <div class="text-center mb-10 dark:text-white">
       <div>
         <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
@@ -266,26 +267,23 @@ onBeforeUnmount(() => {
     'border-indigo-500 text-indigo-700': mode !== 'filter',
   }"
 >
-  <option
-    :value="null"
-    disabled
-    selected
-  >
+  <option :value="null" disabled selected>
     {{
       mode === 'filter' && unansweredIndexes.length > 0
-        ? 'Unanswered questions'
+        ? 'Unanswered questions'  
         : 'Select a question'
     }}
   </option>
 
   <option
-    v-for="(q, index) in filteredQuestions"
-    :key="index"
+    v-for="(index, idx) in (mode === 'filter' ? unansweredIndexes : questions.map((_, i) => i))"
+    :key="idx"
     :value="index"
   >
     Question {{ index + 1 }}
   </option>
 </select>
+
       </div>
       <div v-if="currentQuestion" class="question-container">
         <h3
