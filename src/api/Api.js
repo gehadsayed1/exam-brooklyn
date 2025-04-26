@@ -20,4 +20,5 @@
  export const ALL_SCHOLARSHIPS= "scholarships"
  export const  FORGOT_PASSWORD = "forgotPassword"
     export const RESET_PASSWORD = "resetPassword"
+    export const IMPORT_EXAMS  = "importExams"
 
