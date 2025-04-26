@@ -10,7 +10,8 @@ import {
   RESET_PASSWORD,
   USER_BY_TOKEN,
 } from "../api/Api";
-import CryptoJS from "crypto-js"; // تم إضافته
+import CryptoJS from "crypto-js"; 
+import { handleError } from "./handleError";
 
 export const useAuthStore = defineStore("authStore", () => {
   const token = ref(null);
@@ -34,7 +35,7 @@ export const useAuthStore = defineStore("authStore", () => {
       const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
       return JSON.parse(decryptedData);
     } catch (error) {
-      console.error("Failed to decrypt permissions:", error);
+      handleError(error);
       return [];
     }
   };
@@ -71,9 +72,7 @@ export const useAuthStore = defineStore("authStore", () => {
       notyf.success("Logged in successfully");
       router.push("/systems");
     } catch (err) {
-      console.error("Login failed:", err);
-      error.value = err.response?.data?.message || "Failed to login";
-      notyf.error(error.value);
+      handleError(err);
     } finally {
       loading.value = false;
     }
@@ -85,7 +84,7 @@ export const useAuthStore = defineStore("authStore", () => {
       await apiClient.post("logout");
       notyf.success("Logged out successfully");
     } catch (err) {
-      console.error("Logout failed:", err);
+      handleError(err);
     } finally {
       token.value = null;
       user.value = null;
@@ -107,7 +106,7 @@ export const useAuthStore = defineStore("authStore", () => {
       notyf.success(response.data.message);
       forgotSuccess.value = response.data.message;
     } catch (err) {
-      error.value = err.response?.data?.message || "Failed to send OTP";
+      handleError(err);
       notyf.error(error.value);
       forgotSuccess.value = null;
     } finally {
@@ -129,16 +128,7 @@ export const useAuthStore = defineStore("authStore", () => {
       notyf.success("Password reset successfully");
       router.push({ name: "login" });
     } catch (err) {
-      if (err.response && err.response.status === 422) {
-        const serverErrors = err.response.data.errors;
-        for (const key in serverErrors) {
-          error.value[key] = serverErrors[key][0];
-        }
-        notyf.error("Please fix the errors below.");
-      } else {
-        error.value = err.response?.data?.message || "Failed to reset password";
-        notyf.error(error.value);
-      }
+      handleError(err);
     } finally {
       loading.value = false;
     }
@@ -160,7 +150,7 @@ export const useAuthStore = defineStore("authStore", () => {
         path: "/",
       });
     } catch (error) {
-      console.error(error);
+      handleError(error);
     }
   };
 

@@ -2,26 +2,27 @@
   <div class="space-y-6">
     <div class="flex items-end w-[400px] justify-center gap-2">
       <div>
-        <label class="text-gray-700 font-medium block mb-1">Select Instructor:</label>
-        
-        <select
-  :disabled="disabled" 
-  v-model="selectedInstructor"
-  class="w-[200px] border border-indigo-500 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
->
-  <option disabled value="">
-   
-    {{ disabled ? 'Select course first' : 'Choose Instructor' }}
-  </option>
+        <label class="text-gray-700 font-medium block mb-1"
+          >Select Instructor:</label
+        >
 
-  <option
-    v-for="ins in studentStore.instructors.data"
-    :key="ins.id"
-    :value="ins.id"
-  >
-    {{ ins.name }}
-  </option>
-</select>
+        <select
+          :disabled="disabled"
+          v-model="selectedInstructor"
+          class="w-[200px] border border-indigo-500 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+        <option disabled value="" class="text-gray-400">
+            {{ disabled ? "Select course first" : "Choose Instructor" }}
+          </option>
+
+          <option
+            v-for="ins in studentStore.instructors.data"
+            :key="ins.id"
+            :value="ins.id"
+          >
+            {{ ins.name }}
+          </option>
+        </select>
       </div>
 
       <div class="flex gap-2">
@@ -42,17 +43,13 @@ import { Plus } from "lucide-vue-next";
 import { RouterLink } from "vue-router";
 import { useStudentStore } from "@/stores/studentStore";
 
-
-
 const studentStore = useStudentStore();
 const props = defineProps({
   disabled: {
-    type: Boolean, 
-    default: false
-  }
+    type: Boolean,
+    default: false,
+  },
 });
-
-
 
 const modelValue = defineModel();
 const selectedInstructor = ref(modelValue.value);

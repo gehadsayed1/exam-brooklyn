@@ -1,3 +1,9 @@
+<script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+</script>
 
 <template>
 
@@ -8,7 +14,7 @@
                         <div class="">
                             
                             <p class="my-2 text-gray-800">Sorry about that! Please visit our hompage to get where you need to go.</p>
-                            <button  class="sm:w-full cursor-pointer lg:w-auto my-2 border rounded md py-4 px-8 text-center bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:ring-opacity-50">Take me there!</button>
+                            <button @click="router.push({ name: 'SystemsPage' })"  class="sm:w-full cursor-pointer lg:w-auto my-2 border rounded md py-4 px-8 text-center bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-700 focus:ring-opacity-50">Take me there!</button>
                         </div>
                     </div>
                     <div>

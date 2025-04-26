@@ -9,7 +9,9 @@
     <div v-else>
       <div class="flex flex-wrap items-center justify-center gap-4">
         <CourseSelect v-model="exam.course_id" />
-        <InstructorSelect v-model="exam.ins_id" />
+        <InstructorSelect v-model="exam.ins_id" :disabled="!courseChanged" />
+
+
         
       </div>
 
@@ -38,11 +40,11 @@
 
       <div class="flex justify-center items-center mt-6 gap-4">
         <button
-          v-if="showGetButton"
+          v-if="showGetButton || authStore.hasPermission('view-questions') || authStore.hasPermission('edit-questions')"
           @click="loadQuestions"
           class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 flex items-center gap-2 min-w-[140px]"
         >
-          <span v-if="loadingQuestions || authStore.hasPermission('view-questions') || authStore.hasPermission('edit-questions')" class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+          <span v-if="loadingQuestions" class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
           <span v-else>Get Questions</span>
         </button>
 
@@ -101,10 +103,13 @@ const showEditor = ref(false);
 const showAdder = ref(false);
 const showGetButton = ref(true);
 const showAddButton = ref(true);
-
+const courseChanged = ref(false);
 const addQuestions = ref([]);
 const questions = ref([]);
 const questionForm = ref()
+
+
+
 
 
 
@@ -174,6 +179,7 @@ const loadQuestions = async () => {
     questions.value = examStore.examQuestions;
     showEditor.value = true;
     showAdder.value = false;
+    loadingQuestions.value = false;
     showGetButton.value = false;
   } catch (err) {
     console.error("Error loading questions:", err);
@@ -188,30 +194,37 @@ const handleQuestionsUpdate = (updated) => {
 };
 
 const updateExam = async () => {
-  // if (!hasChanges.value ) {
-  //   notyf.error("No changes were made.");
-  //   return;
-  // }
-  const questions = questionForm.value.getQuestions();
-  if (!questions) return;
-  
   submitting.value = true;
 
   try {
-    exam.value.questions = questions;
+    // لو showAdder مفتوح يعني فيه إضافة أسئلة جديدة
+    if (showAdder.value && questionForm.value) {
+      const questions = questionForm.value.getQuestions();
+      if (questions) {
+        exam.value.questions = questions;
+      }
+    }
 
     console.log("Submitting exam data:", exam.value);
-    
+
     await examStore.updateExam(route.params.id, exam.value);
- 
-    
+
+    notyf.success("Exam updated successfully!");
     hasChanges.value = false;
   } catch (err) {
     console.error("Error updating exam:", err);
+    notyf.error("Failed to update exam.");
   } finally {
     submitting.value = false;
   }
 };
+
+
+watch(() => exam.course_id, (newVal, oldVal) => {
+  if (newVal !== initialExamData.course_id) {
+    courseChanged.value = true;
+  }
+});
 
 const submitNewQuestions = async () => {
   submittingNewQuestions.value = true;

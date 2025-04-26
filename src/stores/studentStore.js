@@ -11,6 +11,7 @@ import {
 } from "../api/Api";
 import notyf from "@/components/global/notyf";
 import { useRouter } from "vue-router";
+import { handleError } from "./handleError";
 
 export const useStudentStore = defineStore("studentStore", () => {
   const studentId = ref("");
@@ -169,9 +170,7 @@ export const useStudentStore = defineStore("studentStore", () => {
     } catch (error) {
       console.error(error);
 
-      if (error.response && error.response.data) {
-        errorMessages.value = error.response.data.message || "Something went wrong.";
-      }
+      handleError(error);
       loading.value = false;
       router.push({ name: "home" });
     } finally {
@@ -200,7 +199,7 @@ export const useStudentStore = defineStore("studentStore", () => {
       );
       console.log(res.data);
     } catch (error) {
-      notyf.error("Error submitting answers.");
+      handleError(error);
       console.error("Error:", error.response || error);
     }
   };
@@ -246,7 +245,9 @@ export const useStudentStore = defineStore("studentStore", () => {
         notyf.error("Error in closing the exam. Please try again.");
       }
     } catch (error) {
+      handleError(error);
       console.error("Error:", error.response || error);
+
     }
   };
 

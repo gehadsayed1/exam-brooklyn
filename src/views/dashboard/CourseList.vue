@@ -23,7 +23,7 @@
         ]"
         :items="filteredCourses"
         resourceType="courses"
-        isCourse="true"
+        :isCourse="true"
         @edit="editCourse"
         @delete="confirmDelete"
         

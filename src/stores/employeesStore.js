@@ -3,6 +3,7 @@ import { ref } from "vue";
 import apiClient from "../api/axiosInstance";
 import { REGISTER, USERS , USER_BY_TOKEN} from "../api/Api";
 import notyf from "@/components/global/notyf";
+import { handleError } from "./handleError";
 
 export const useEmployeeStore = defineStore("employees", () => {
   const employees = ref([]);
@@ -18,7 +19,7 @@ export const useEmployeeStore = defineStore("employees", () => {
       employees.value =  response.data.data
       loading.value = false;
     } catch (error) {
-      console.error(error);
+      handleError(error);
       loading.value = false;
     }
   };
@@ -33,7 +34,7 @@ export const useEmployeeStore = defineStore("employees", () => {
       
       loading.value = false;
     } catch (error) {
-      console.error(error);
+      handleError(error);
       loading.value = false;
     }
   };
@@ -45,8 +46,7 @@ export const useEmployeeStore = defineStore("employees", () => {
       employees.value.push(response.data.user);
       notyf.success("Employee Created successfully");
     } catch (error) {
-      console.error(error);
-      notyf.error("An error occurred while adding employee.");
+      handleError(error);
     }
   };
 
@@ -64,11 +64,7 @@ export const useEmployeeStore = defineStore("employees", () => {
       
       notyf.success("Employee updated successfully");
     } catch (error) {
-      console.error(error);
-      error.response.data.forEach((err) => {
-        notyf.error(err.message);
-      });
-      notyf.error("An error occurred while updating employee.");
+      handleError(error);
     }
   };
 
@@ -82,7 +78,7 @@ export const useEmployeeStore = defineStore("employees", () => {
       notyf.success("Employee deleted successfully");
     } catch (error) {
       console.error(error);
-      notyf.error("An error occurred while deleting employee.");
+      handleError(error);
     }
   };
 
