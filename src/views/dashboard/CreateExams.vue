@@ -8,6 +8,7 @@ import { useExamStore } from "@/stores/examStore";
 import { useScholarshipStore } from "@/stores/scholarships";
 import notyf from "@/components/global/Notyf";
 import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
 
 
 const authStore = useAuthStore();
@@ -16,6 +17,7 @@ const isAdding = ref(false);
 const emitter = inject("emitter");
 const scholarshipStore = useScholarshipStore();
 const questionForm = ref()
+const router = useRouter();
 
 
 onMounted(() => {
@@ -97,6 +99,10 @@ const submitExam = async () => {
 </script>
 
 <template>
+ <div class=" flex justify-end mr-10">
+  <button class="bg-primary text-white py-2 px-4 cursor-pointer mt-5 rounded" @click="router.push({ name: 'examExel'})">Import Exam Excel</button>
+ </div>
+
   <div class="m-10 bg-white shadow-md rounded-2xl p-5">
     <h1 class="text-3xl font-bold text-primary shadow-sm text-center mb-5 p-2">
       Create New Exam
@@ -109,6 +115,7 @@ const submitExam = async () => {
           {{ errors.crs_id }}
         </p>
       </div>
+     
       <div>
       
         <InstructorSelect v-model="exam.ins_id"  :disabled="!exam.crs_id" />

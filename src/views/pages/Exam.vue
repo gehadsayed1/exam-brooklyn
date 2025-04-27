@@ -183,7 +183,7 @@ const submitFinalExam = async () => {
       []
     );
     if (unansweredQuestionIndexes.length > 0) {
-      unansweredIndexes.value = unansweredQuestionIndexes;
+      unansweredIndexes.value = unansweredQuestionIndexes.map((n) => n - 1);
       showUnansweredMessage.value = `Please answer all questions.`;
       mode.value = "filter";
       currentQuestionIndex.value = unansweredIndexes.value[0];
@@ -237,7 +237,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="quiz-container min-h-screen">
+  <div class="quiz-container min-h-screen w-full">
     <div class="text-center mb-10 dark:text-white">
       <div>
         <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
@@ -267,26 +267,38 @@ onBeforeUnmount(() => {
 
     <div v-if="quizStarted">
       <div class="text-end mb-5 mt-4">
-        <label class="text-gray-700 font-medium block mb-2">Go to question:</label>
-        <select v-model="currentQuestionIndex" class="border px-4 py-2 rounded-md font-semibold"
-          @change="loadSelectedOption" :class="{
-            'border-red-500 text-red-600': unansweredIndexes.length > 0 && mode === 'filter',
-            'border-indigo-500 text-indigo-700': mode !== 'filter',
-          }">
-          <option :value="null" disabled selected>
-            {{
-              mode === 'filter' && unansweredIndexes.length > 0
-                ? 'Unanswered questions'
-                : 'Select a question'
-            }}
-          </option>
-          <!-- Show all questions if quiz has started -->
-          <option v-for="(q, idx) in (mode === 'filter' ? filteredQuestions : questions)" :key="idx"
-            :value="mode === 'filter' ? unansweredIndexes[idx] : idx">
-            Question {{ (mode === 'filter' ? unansweredIndexes[idx] : idx) + 1 }}
-          </option>
+        <label class="text-gray-700 font-medium block mb-2"
+          >Go to question:</label
+        >
+        <select
+  v-model="currentQuestionIndex"
+  class="border px-4 py-2 rounded-md font-semibold"
+  @change="loadSelectedOption"
+  :class="{
+    'border-red-500 text-red-600': unansweredIndexes.length > 0 && mode === 'filter',
+    'border-indigo-500 text-indigo-700': mode !== 'filter',
+  }"
+>
+  <option
+    :value="null"
+    disabled
+    selected
+  >
+    {{
+      mode === 'filter' && unansweredIndexes.length > 0
+        ? 'Unanswered questions'
+        : 'Select a question'
+    }}
+  </option>
 
-        </select>
+  <option
+    v-for="(q, index) in filteredQuestions"
+    :key="index"
+    :value="index"
+  >
+    Question {{ index + 1 }}
+  </option>
+</select>
       </div>
       <div v-if="currentQuestion" class="question-container">
         <h3 class="text-lg font-semibold text-center border p-3 rounded-xl mb-5 bg-primary text-white">

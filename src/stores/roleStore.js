@@ -3,6 +3,7 @@ import { ref } from "vue";
 import apiClient from "../api/axiosInstance";
 import { PERMISSIONS, ROLES } from "../api/Api";
 import notyf from "@/components/global/notyf";
+import { handleError } from "./handleError";
 
 export const useRoleStore = defineStore("roleStore", () => {
   const roles = ref([]);
@@ -58,9 +59,7 @@ export const useRoleStore = defineStore("roleStore", () => {
       console.log("Role added successfully:", response.data.data);
       return response.data.data; 
     } catch (err) {
-      error.value = "Failed to add role";
-      console.error("Add Error:", err.response?.data?.message || err.message);
-      throw err;
+      handleError(err);
     } finally {
       loading.value = false;
     }
@@ -81,9 +80,7 @@ export const useRoleStore = defineStore("roleStore", () => {
       console.log("Role updated successfully:", response.data.data);
       return response.data.data;
     } catch (err) {
-      error.value = "Failed to update role";
-      console.error("Update Error:", err.response?.data?.message || err.message);
-      throw err;
+      handleError(err);
     } 
   };
 
@@ -97,9 +94,7 @@ export const useRoleStore = defineStore("roleStore", () => {
       notyf.success("Role deleted successfully");
       console.log("Role deleted successfully:", roleId);
     } catch (err) {
-      error.value = "Failed to delete role";
-      console.error("Delete Error:", err.response?.data?.message || err.message);
-      throw err;
+      handleError(err);
     } 
   };
 

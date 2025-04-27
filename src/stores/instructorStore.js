@@ -4,6 +4,7 @@ import { ref } from "vue";
 import apiClient from "../api/axiosInstance";
 import { ALL_INSTRUCTORS } from "../api/Api";
 import notyf from "../components/global/notyf";
+import { handleError } from "./handleError";
 
 export const useInstructorStore = defineStore("instructorStore", () => {
   const instructors = ref([]);
@@ -19,8 +20,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
       instructors.value = response.data.data;
       loading.value = false;
     } catch (err) {
-      error.value = "Failed to fetch instructors";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     } finally {
       loading.value = false;
@@ -36,8 +36,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
       instructors.value.push(response.data.data);
       notyf.success("Instructor added successfully");
     } catch (err) {
-      error.value = "Failed to add instructor";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     }
   };
@@ -55,8 +54,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
       }
       notyf.success("Instructor updated successfully");
     } catch (err) {
-      error.value = "Failed to update instructor";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     }
   };
@@ -68,8 +66,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
       instructors.value = instructors.value.filter((i) => i.id !== id);
       notyf.success("Instructor has been deleted.");
     } catch (err) {
-      error.value = "Failed to delete instructor";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     }
   };

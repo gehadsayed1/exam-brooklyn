@@ -23,8 +23,7 @@ export const useExamStore = defineStore("examStore", () => {
       
       exams.value = response.data.data;
     } catch (err) {
-      error.value = "Failed to fetch exams";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     } finally {
       loading.value = false;
@@ -41,18 +40,7 @@ export const useExamStore = defineStore("examStore", () => {
       exams.value.push(response.data);
       router.push({ name: "exams" });
     } catch (err) {
-      if (Array.isArray(err?.response?.data?.error)) {
-        err.response.data.error.forEach((e) => {
-          notyf.error(e.message || "Failed to create exam");
-        });
-      } else {
-        const message =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err.message ||
-          "Failed to create exam";
-        notyf.error(message);
-      }
+      handleError(err);
     
       console.error(err);
     }
@@ -72,12 +60,12 @@ export const useExamStore = defineStore("examStore", () => {
       console.log(response.data);
       examQuestions.value = response.data.data;
       notyf.success("Exam updated successfully");
-      router.push("/exams");
+      router.push({ name: "exams" });
       loading.value = false;
     } catch (err) {
      
       console.error(err);
-      notyf.error("Failed to update exam");
+      handleError(err);
     }
   };
 
@@ -89,8 +77,7 @@ export const useExamStore = defineStore("examStore", () => {
       singleExam.value = response.data.data;
       loading.value = false;
     } catch (err) {
-      error.value = "Failed to fetch exam";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     } finally {
       loading.value = false;
@@ -104,8 +91,7 @@ export const useExamStore = defineStore("examStore", () => {
       exams.value = exams.value.filter((e) => e.id !== id);
       notyf.success("Exam deleted successfully");
     } catch (err) {
-      error.value = "Failed to delete exam";
-      notyf.error(error.value);
+      handleError(err);
       console.error(err);
     }
   };
@@ -116,7 +102,7 @@ export const useExamStore = defineStore("examStore", () => {
       const response = await apiClient.get(`${ALL_EXAMS}/${examId}/questions`);
       examQuestions.value = response.data.data;
     } catch (err) {
-      notyf.error("Failed to fetch questions");
+      handleError(err);
       console.error(err);
     }
   };
@@ -135,8 +121,7 @@ export const useExamStore = defineStore("examStore", () => {
         notyf.error("Failed to update question, unexpected response");
       }
     } catch (err) {
-      console.error("Error occurred while updating question:", err);
-      notyf.error("Failed to update question");
+      handleError(err);
     }
   };
   
@@ -149,7 +134,7 @@ export const useExamStore = defineStore("examStore", () => {
       notyf.success("Question deleted successfully");
     }
     catch (err) {
-      notyf.error("Failed to delete question");
+      handleError(err);
       console.error(err);
     }
   };
@@ -165,7 +150,7 @@ export const useExamStore = defineStore("examStore", () => {
       notyf.success("Questions added successfully");
     } catch (err) {
       console.error(err);
-      notyf.error("Failed to add new questions");
+      handleError(err);
     }
   };
 

@@ -55,6 +55,12 @@ const routes = [
         component: () => import("@/views/dashboard/CreateExams.vue"),
       },
       {
+        path: "examExel",
+        name: "examExel",
+        meta: { requiresPermission: "create-exams" },
+        component: () => import("@/views/dashboard/ImportExamExcel.vue"),
+      },
+      {
         path: "exams",
         name: "exams",
         meta: { requiresPermission: "view-exams" },

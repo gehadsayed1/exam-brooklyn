@@ -115,7 +115,7 @@
             label="name"
             multiple
             placeholder="Select Courses"
-            :loading="coursesStore.loading"
+            :loading="courseStore.loading"
             loading-text="Loading courses..."
             no-options="No courses available"
             class="w-full border border-gray-200 bg-white outline-0 shadow-2xl shadow-gray-200 rounded-md px-3 py-2"
@@ -133,7 +133,7 @@
             label="name"
             multiple
             placeholder="Select Roles"
-            :loading="rolesStore.loading"
+            :loading="roleStore.loading"
             loading-text="Loading roles..."
             no-options="No roles available"
             class="w-full border border-gray-200 bg-white outline-0 shadow-2xl shadow-gray-200 rounded-md px-3 py-2"
@@ -321,6 +321,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-/* Add your custom styles here if needed */
-</style>
+
