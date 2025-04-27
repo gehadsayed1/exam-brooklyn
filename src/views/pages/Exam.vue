@@ -53,12 +53,9 @@ const answeredCount = computed(() => studentStore.examAnswers.length);
 
 
 const filteredQuestions = computed(() => {
-  return mode.value === "filter"
-    ? questions.value.filter(
-        (_, i) => unansweredIndexes.value.includes(i)
-      )
-    : questions.value;
+  return unansweredIndexes.value.map(index => questions.value[index]);
 });
+
 
 const startTimer = () => {
   interval = setInterval(() => {
@@ -97,20 +94,12 @@ const saveAnswer = () => {
     );
 
     if (existingIndex !== -1) {
-      studentStore.examAnswers[existingIndex] = answer;
+      studentStore.examAnswers[existingIndex] = answer; // Update existing answer
     } else {
-      studentStore.examAnswers.push(answer);
+      studentStore.examAnswers.push(answer); // Add new answer
     }
 
-    const answersIndex = answersArray.value.findIndex(
-      (a) => a.q_id === currentQuestion.value.id
-    );
-    if (answersIndex !== -1) {
-      answersArray.value[answersIndex] = answer;
-    } else {
-      answersArray.value.push(answer);
-    }
-
+    // Remove the answered question from unansweredIndexes
     const i = unansweredIndexes.value.indexOf(currentQuestionIndex.value);
     if (i !== -1) {
       unansweredIndexes.value.splice(i, 1);
@@ -119,7 +108,7 @@ const saveAnswer = () => {
       }
     }
 
-    sessionStorage.setItem("answers", JSON.stringify(answersArray.value));
+    sessionStorage.setItem("answers", JSON.stringify(studentStore.examAnswers));
   }
 };
 
@@ -144,13 +133,23 @@ const loadSelectedOption = () => {
 
 const handleStart = () => {
   currentQuestionIndex.value = 0;
-
   quizStarted.value = true;
   timeLeft.value = remainingTime.value;
+  mode.value = "all"; // Ensure all questions are shown initially
+
+  // Load previous answers into selectedOptions
+  previousAnswers.value.forEach((answer) => {
+    const questionIndex = questions.value.findIndex(
+      (q) => q.id === answer.q_id
+    );
+    if (questionIndex !== -1) {
+      selectedOptions.value[questionIndex] = answer.selected_option;
+    }
+  });
+
   startTimer();
   loadSelectedOption();
 };
-
 const nextQuestion = async () => {
   saveAnswer();
   if (!isLastQuestion.value) {
@@ -177,15 +176,14 @@ const submitFinalExam = async () => {
           selectedOptions.value[index] === null ||
           selectedOptions.value[index] === undefined
         ) {
-          acc.push(index + 1);
+          acc.push(index);
         }
         return acc;
       },
       []
     );
-
     if (unansweredQuestionIndexes.length > 0) {
-      unansweredIndexes.value = unansweredQuestionIndexes.map((n) => n - 1);
+      unansweredIndexes.value = unansweredQuestionIndexes;
       showUnansweredMessage.value = `Please answer all questions.`;
       mode.value = "filter";
       currentQuestionIndex.value = unansweredIndexes.value[0];
@@ -194,8 +192,24 @@ const submitFinalExam = async () => {
       showUnansweredMessage.value = "";
     }
 
-    saveAnswer();
-    const payload = { answers: answersArray.value };
+    // Combine previous answers with current answers
+    const allAnswers = [
+      ...previousAnswers.value,
+      ...studentStore.examAnswers,
+    ];
+
+    // Remove duplicates by keeping the latest answer for each question
+    const uniqueAnswers = allAnswers.reduce((acc, answer) => {
+      const existingIndex = acc.findIndex((a) => a.q_id === answer.q_id);
+      if (existingIndex !== -1) {
+        acc[existingIndex] = answer; // Replace with the latest answer
+      } else {
+        acc.push(answer); // Add new answer
+      }
+      return acc;
+    }, []);
+
+    const payload = { answers: uniqueAnswers };
     isSubmitting.value = true;
     await studentStore.submitFinalExam(payload);
     isSubmitting.value = false;
@@ -205,7 +219,6 @@ const submitFinalExam = async () => {
     notyf.error("Error submitting final exam");
   }
 };
-
 // Handle before unload
 const handleBeforeUnload = (e) => {
   e.preventDefault();
@@ -254,59 +267,36 @@ onBeforeUnmount(() => {
 
     <div v-if="quizStarted">
       <div class="text-end mb-5 mt-4">
-        <label class="text-gray-700 font-medium block mb-2"
-          >Go to question:</label
-        >
-        <select
-  v-model="currentQuestionIndex"
-  class="border px-4 py-2 rounded-md font-semibold"
-  @change="loadSelectedOption"
-  :class="{
-    'border-red-500 text-red-600': unansweredIndexes.length > 0 && mode === 'filter',
-    'border-indigo-500 text-indigo-700': mode !== 'filter',
-  }"
->
-  <option
-    :value="null"
-    disabled
-    selected
-  >
-    {{
-      mode === 'filter' && unansweredIndexes.length > 0
-        ? 'Unanswered questions'
-        : 'Select a question'
-    }}
-  </option>
+        <label class="text-gray-700 font-medium block mb-2">Go to question:</label>
+        <select v-model="currentQuestionIndex" class="border px-4 py-2 rounded-md font-semibold"
+          @change="loadSelectedOption" :class="{
+            'border-red-500 text-red-600': unansweredIndexes.length > 0 && mode === 'filter',
+            'border-indigo-500 text-indigo-700': mode !== 'filter',
+          }">
+          <option :value="null" disabled selected>
+            {{
+              mode === 'filter' && unansweredIndexes.length > 0
+                ? 'Unanswered questions'
+                : 'Select a question'
+            }}
+          </option>
+          <!-- Show all questions if quiz has started -->
+          <option v-for="(q, idx) in (mode === 'filter' ? filteredQuestions : questions)" :key="idx"
+            :value="mode === 'filter' ? unansweredIndexes[idx] : idx">
+            Question {{ (mode === 'filter' ? unansweredIndexes[idx] : idx) + 1 }}
+          </option>
 
-  <option
-    v-for="(q, index) in filteredQuestions"
-    :key="index"
-    :value="index"
-  >
-    Question {{ index + 1 }}
-  </option>
-</select>
+        </select>
       </div>
       <div v-if="currentQuestion" class="question-container">
-        <h3
-          class="text-lg font-semibold text-center border p-3 rounded-xl mb-5 bg-primary text-white"
-        >
+        <h3 class="text-lg font-semibold text-center border p-3 rounded-xl mb-5 bg-primary text-white">
           {{ currentQuestion.question_text }}
         </h3>
-        <div
-          v-for="(option, key) in currentQuestion.options"
-          :key="key"
-          class="option dark:text-gray-300"
+        <div v-for="(option, key) in currentQuestion.options" :key="key" class="option dark:text-gray-300"
           :class="{ selected: selectedOptions[currentQuestionIndex] === key }"
-          @click="selectedOptions[currentQuestionIndex] = key"
-        >
-          <input
-            type="radio"
-            :id="'option-' + key"
-            v-model="selectedOptions[currentQuestionIndex]"
-            :value="key"
-            style="opacity: 0; position: absolute"
-          />
+          @click="selectedOptions[currentQuestionIndex] = key">
+          <input type="radio" :id="'option-' + key" v-model="selectedOptions[currentQuestionIndex]" :value="key"
+            style="opacity: 0; position: absolute" />
           <label :for="'option-' + key">{{ option }}</label>
         </div>
       </div>
@@ -317,9 +307,7 @@ onBeforeUnmount(() => {
           next
         </button>
         <button v-if="isLastQuestion" @click="submitFinalExam" class="btn-next">
-          <span v-if="isSubmitting"
-            ><i class="fa-solid fa-circle-notch fa-spin-pulse"></i
-          ></span>
+          <span v-if="isSubmitting"><i class="fa-solid fa-circle-notch fa-spin-pulse"></i></span>
           <span v-else>Submit</span>
         </button>
       </div>
@@ -333,25 +321,16 @@ onBeforeUnmount(() => {
         </button>
       </div> -->
 
-      <div
-        class="answered-counter text-center mt-3 text-lg font-medium dark:text-white"
-      >
+      <div class="answered-counter text-center mt-3 text-lg font-medium dark:text-white">
         It has been answered
-        <span class="text-primary dark:text-blue-500 text-xl font-bold"
-          >({{ answeredCount }})</span
-        >
+        <span class="text-primary dark:text-blue-500 text-xl font-bold">({{ answeredCount }})</span>
         from
-        <span class="text-primary font-bold text-xl dark:text-blue-500"
-          >({{ questions.length }})</span
-        >
+        <span class="text-primary font-bold text-xl dark:text-blue-500">({{ questions.length }})</span>
         Questions
       </div>
     </div>
 
-    <div
-      v-if="showUnansweredMessage"
-      class="alert-message text-red-500 text-center mt-3"
-    >
+    <div v-if="showUnansweredMessage" class="alert-message text-red-500 text-center mt-3">
       {{ showUnansweredMessage }}
     </div>
   </div>

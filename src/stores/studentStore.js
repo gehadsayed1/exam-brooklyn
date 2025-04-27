@@ -163,6 +163,7 @@ export const useStudentStore = defineStore("studentStore", () => {
         otpMasg.value = "";
         errorMessages.value = "";
         router.push({ name: "examPage" });
+        startAutoSubmit();
       } else {
         console.error("الاستجابة غير متوقعة من السيرفر:", response);
       }
@@ -205,11 +206,24 @@ export const useStudentStore = defineStore("studentStore", () => {
     }
   };
 
-  const interval = setInterval(submitExamAnswers, 3000);
+  let interval = null;
+  
+  const startAutoSubmit = () => {
+     interval = setInterval(() => {
+       submitExamAnswers();
+     }, 5000); 
+   };
+  
+   const stopAutoSubmit = () => {
+     if (interval) {
+       clearInterval(interval);
+      interval = null;
+     }
+   };
 
   const submitFinalExam = async (payload) => {
     clearInterval(interval);
-
+    stopAutoSubmit();
     try {
       let answers = payload.answers;
 
@@ -230,12 +244,14 @@ export const useStudentStore = defineStore("studentStore", () => {
       };
 
       console.log("Final Payload:", finalPayload);
+      console.log("Attempt ID:", storedAttemptId.value);
+      
 
       const res = await apiClient.post(
         `${FINISH_EXAM_API}/${storedAttemptId.value}`,
         finalPayload
       );
-
+      stopAutoSubmit();
       console.log("Response:", res.data);
 
       if (res.data && res.data.message) {
