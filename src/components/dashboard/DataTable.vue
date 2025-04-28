@@ -203,7 +203,7 @@ const canEdit = computed(() =>
 const canDelete = computed(() =>
   authStore.hasPermission(`delete-${props.resourceType}`)
 );
-// const canCreate = computed(() => hasPermission(`create-${props.resourceType}`));
+const canCreate = computed(() => hasPermission(`create-${props.resourceType}`));
 
 // Function to format the created_at or updated_at date
 const formatDate = (date) => {
