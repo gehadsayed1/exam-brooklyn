@@ -31,7 +31,7 @@ export const useInstructorStore = defineStore("instructorStore", () => {
   const addInstructor = async ({ name, phone }) => {
     try {
       const response = await apiClient.post(ALL_INSTRUCTORS, { name, phone });
-      console.log(response.data);
+      (response.data);
 
       instructors.value.push(response.data.data);
       notyf.success("Instructor added successfully");

@@ -53,9 +53,12 @@ const answeredCount = computed(() => studentStore.examAnswers.length);
 
 
 const filteredQuestions = computed(() => {
-  return unansweredIndexes.value.map(index => questions.value[index]);
+  return mode.value === "filter"
+    ? questions.value.filter(
+        (_, i) => unansweredIndexes.value.includes(i)
+      )
+    : questions.value;
 });
-
 
 const startTimer = () => {
   interval = setInterval(() => {
@@ -94,12 +97,20 @@ const saveAnswer = () => {
     );
 
     if (existingIndex !== -1) {
-      studentStore.examAnswers[existingIndex] = answer; // Update existing answer
+      studentStore.examAnswers[existingIndex] = answer;
     } else {
-      studentStore.examAnswers.push(answer); // Add new answer
+      studentStore.examAnswers.push(answer);
     }
 
-    // Remove the answered question from unansweredIndexes
+    const answersIndex = answersArray.value.findIndex(
+      (a) => a.q_id === currentQuestion.value.id
+    );
+    if (answersIndex !== -1) {
+      answersArray.value[answersIndex] = answer;
+    } else {
+      answersArray.value.push(answer);
+    }
+
     const i = unansweredIndexes.value.indexOf(currentQuestionIndex.value);
     if (i !== -1) {
       unansweredIndexes.value.splice(i, 1);
@@ -108,7 +119,7 @@ const saveAnswer = () => {
       }
     }
 
-    sessionStorage.setItem("answers", JSON.stringify(studentStore.examAnswers));
+    sessionStorage.setItem("answers", JSON.stringify(answersArray.value));
   }
 };
 
@@ -133,23 +144,13 @@ const loadSelectedOption = () => {
 
 const handleStart = () => {
   currentQuestionIndex.value = 0;
+
   quizStarted.value = true;
   timeLeft.value = remainingTime.value;
-  mode.value = "all"; // Ensure all questions are shown initially
-
-  // Load previous answers into selectedOptions
-  previousAnswers.value.forEach((answer) => {
-    const questionIndex = questions.value.findIndex(
-      (q) => q.id === answer.q_id
-    );
-    if (questionIndex !== -1) {
-      selectedOptions.value[questionIndex] = answer.selected_option;
-    }
-  });
-
   startTimer();
   loadSelectedOption();
 };
+
 const nextQuestion = async () => {
   saveAnswer();
   if (!isLastQuestion.value) {
@@ -169,6 +170,8 @@ const previousQuestion = () => {
 };
 
 const submitFinalExam = async () => {
+
+
   try {
     const unansweredQuestionIndexes = questions.value.reduce(
       (acc, question, index) => {
@@ -176,14 +179,16 @@ const submitFinalExam = async () => {
           selectedOptions.value[index] === null ||
           selectedOptions.value[index] === undefined
         ) {
-          acc.push(index);
+          acc.push(index + 1);
         }
         return acc;
       },
       []
     );
+
     if (unansweredQuestionIndexes.length > 0) {
       unansweredIndexes.value = unansweredQuestionIndexes.map((n) => n - 1);
+
       showUnansweredMessage.value = `Please answer all questions.`;
       mode.value = "filter";
       currentQuestionIndex.value = unansweredIndexes.value[0];
@@ -192,25 +197,11 @@ const submitFinalExam = async () => {
       showUnansweredMessage.value = "";
     }
 
-    // Combine previous answers with current answers
-    const allAnswers = [
-      ...previousAnswers.value,
-      ...studentStore.examAnswers,
-    ];
-
-    // Remove duplicates by keeping the latest answer for each question
-    const uniqueAnswers = allAnswers.reduce((acc, answer) => {
-      const existingIndex = acc.findIndex((a) => a.q_id === answer.q_id);
-      if (existingIndex !== -1) {
-        acc[existingIndex] = answer; // Replace with the latest answer
-      } else {
-        acc.push(answer); // Add new answer
-      }
-      return acc;
-    }, []);
-
-    const payload = { answers: uniqueAnswers };
+    saveAnswer();
+    const payload = { answers: answersArray.value };
     isSubmitting.value = true;
+    (payload);
+    
     await studentStore.submitFinalExam(payload);
     isSubmitting.value = false;
     clearInterval(interval);
@@ -219,6 +210,7 @@ const submitFinalExam = async () => {
     notyf.error("Error submitting final exam");
   }
 };
+
 // Handle before unload
 const handleBeforeUnload = (e) => {
   e.preventDefault();
@@ -240,7 +232,7 @@ onBeforeUnmount(() => {
   <div class="quiz-container min-h-screen w-full">
     <div class="text-center mb-10 dark:text-white">
       <div>
-        <h2 class="font-bold mt-5 mb-5">{{ exam.name }}</h2>
+        <h2 class="font-bold mt-5 mb-5 text-">{{ exam.name }}</h2>
       </div>
 
       <div class="text-xl font-semibold mb-8">
@@ -258,8 +250,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Show 'Start Exam' button initially -->
-    <div v-if="!quizStarted && timeLeft > 0" class="text-center">
-      <button @click="handleStart" class="btn-start">Start Exam</button>
+    <div v-if="!quizStarted && timeLeft > 0" class="text-center ">
+      <button @click="handleStart" class="buttonClass">Start Exam</button>
     </div>
     <div v-if="timeLeft <= 0" class="text-center">
       <button @click="router.push('/home')" class="btn-start">Go Back</button>
@@ -279,36 +271,44 @@ onBeforeUnmount(() => {
     'border-indigo-500 text-indigo-700': mode !== 'filter',
   }"
 >
-  <option
-    :value="null"
-    disabled
-    selected
-  >
+  <option :value="null" disabled selected>
     {{
       mode === 'filter' && unansweredIndexes.length > 0
-        ? 'Unanswered questions'
+        ? 'Unanswered questions'  
         : 'Select a question'
     }}
   </option>
 
   <option
-    v-for="(q, index) in filteredQuestions"
-    :key="index"
+    v-for="(index, idx) in (mode === 'filter' ? unansweredIndexes : questions.map((_, i) => i))"
+    :key="idx"
     :value="index"
   >
     Question {{ index + 1 }}
   </option>
 </select>
+
       </div>
       <div v-if="currentQuestion" class="question-container">
-        <h3 class="text-lg font-semibold text-center border p-3 rounded-xl mb-5 bg-primary text-white">
+        <h3
+          class="text-lg font-semibold  text-center border p-3 rounded-xl mb-5 bg-primary text-white"
+        >
           {{ currentQuestion.question_text }}
         </h3>
-        <div v-for="(option, key) in currentQuestion.options" :key="key" class="option dark:text-gray-300"
+        <div
+          v-for="(option, key) in currentQuestion.options"
+          :key="key"
+          class="option dark:text-gray-300"
           :class="{ selected: selectedOptions[currentQuestionIndex] === key }"
-          @click="selectedOptions[currentQuestionIndex] = key">
-          <input type="radio" :id="'option-' + key" v-model="selectedOptions[currentQuestionIndex]" :value="key"
-            style="opacity: 0; position: absolute" />
+          @click="selectedOptions[currentQuestionIndex] = key"
+        >
+          <input
+            type="radio"
+            :id="'option-' + key"
+            v-model="selectedOptions[currentQuestionIndex]"
+            :value="key"
+            style="opacity: 0; position: absolute"
+          />
           <label :for="'option-' + key">{{ option }}</label>
         </div>
       </div>
@@ -319,7 +319,9 @@ onBeforeUnmount(() => {
           next
         </button>
         <button v-if="isLastQuestion" @click="submitFinalExam" class="btn-next">
-          <span v-if="isSubmitting"><i class="fa-solid fa-circle-notch fa-spin-pulse"></i></span>
+          <span v-if="isSubmitting"
+            ><i class="fa-solid fa-circle-notch fa-spin-pulse"></i
+          ></span>
           <span v-else>Submit</span>
         </button>
       </div>
@@ -333,16 +335,25 @@ onBeforeUnmount(() => {
         </button>
       </div> -->
 
-      <div class="answered-counter text-center mt-3 text-lg font-medium dark:text-white">
+      <div
+        class="answered-counter text-center mt-3 text-lg font-medium dark:text-white"
+      >
         It has been answered
-        <span class="text-primary dark:text-blue-500 text-xl font-bold">({{ answeredCount }})</span>
+        <span class="text-primary dark:text-blue-500 text-xl font-bold"
+          >({{ answeredCount }})</span
+        >
         from
-        <span class="text-primary font-bold text-xl dark:text-blue-500">({{ questions.length }})</span>
+        <span class="text-primary font-bold text-xl dark:text-blue-500"
+          >({{ questions.length }})</span
+        >
         Questions
       </div>
     </div>
 
-    <div v-if="showUnansweredMessage" class="alert-message text-red-500 text-center mt-3">
+    <div
+      v-if="showUnansweredMessage"
+      class="alert-message text-red-500 text-center mt-3"
+    >
       {{ showUnansweredMessage }}
     </div>
   </div>
@@ -355,6 +366,7 @@ onBeforeUnmount(() => {
 }
 
 .quiz-container {
+  position: relative;
   font-family: Arial, sans-serif;
   margin: 20px;
   padding: 10px;
@@ -362,7 +374,28 @@ onBeforeUnmount(() => {
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  overflow: hidden;
+  z-index: 1;
 }
+
+.quiz-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('@/assets/logo.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.07; 
+  z-index: 0;
+ 
+}
+
+.quiz-container > * {
+  position: relative;
+  z-index: 2; 
+}
+
 
 .option {
   display: flex;
@@ -395,20 +428,31 @@ onBeforeUnmount(() => {
   color: white;
 }
 
-button {
-  padding: 10px 50px;
-  background-color: #092c67;
-  color: white;
-  border: none;
-  border-radius: 5px;
+
+.buttonClass {
+  font-size:15px;
+  font-family:Arial;
+  width:140px;
+  height:50px;
+  border-width:1px;
+  color:#fff;
   cursor: pointer;
-  margin-top: 20px;
+  font-weight: 500;
+  font-size: 16px;
+  border-color:rgba(9, 44, 103, 1);
+  border-top-left-radius:10px;
+  border-top-right-radius:10px;
+  border-bottom-left-radius:10px;
+  border-bottom-right-radius:10px;
+  box-shadow: 0px 0px 0px 2px #9fb4f2;
+  text-shadow: 0px 1px 0px rgba(136, 148, 179, 1);
+  background:linear-gradient(rgb(120, 146, 194), rgba(9, 44, 103, 1));
 }
 
-button:hover {
-  background-color: #073481;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+.buttonClass:hover {
+  background: linear-gradient(rgba(9, 44, 103, 1), rgb(120, 146, 194));
 }
+              
 
 button:disabled {
   background-color: #ccc;

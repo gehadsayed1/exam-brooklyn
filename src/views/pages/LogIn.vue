@@ -74,7 +74,7 @@ async function handleLogin() {
 async function handleForgotPassword() {
   forgotError.value = "";
   isResetting.value = true;
-  console.log("forgotEmail.value", forgotEmail.value);
+  ("forgotEmail.value", forgotEmail.value);
 
   await auth.forgotPassword(forgotEmail.value);
   isResetting.value = false;

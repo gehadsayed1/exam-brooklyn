@@ -16,7 +16,7 @@ export const useScholarshipStore = defineStore("scholarshipStore", () => {
     try {
       const response = await apiClient.get(ALL_SCHOLARSHIPS);
       scholarships.value = response.data.data;
-      console.log(response.data.data);
+      (response.data.data);
       
     }  catch (err) {
       handleError(err);
@@ -28,7 +28,7 @@ export const useScholarshipStore = defineStore("scholarshipStore", () => {
 
   const addScholarship = async (scholarship) => {
     // loading.value = true;
-    console.log(scholarship);
+    (scholarship);
     
     try {
       const response = await apiClient.post(ALL_SCHOLARSHIPS, scholarship);

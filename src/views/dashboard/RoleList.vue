@@ -2,13 +2,24 @@
   <div class="space-y-6 p-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-800">Role List</h1>
-      <button
+      <!-- <button
         @click="openAddModal"
         v-if="authStore.hasPermission('create-role')"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
         + Add Role
-      </button>
+      </button> -->
+      <!-- From Uiverse.io by Nawsome -->
+      <div
+        @click="openAddModal"
+        v-if="authStore.hasPermission('create-role')"
+        class="buttons"
+      >
+        <button class="btn">
+          <span></span>
+          <p data-start="good luck!" data-text="ADD!" data-title="new Role"></p>
+        </button>
+      </div>
     </div>
 
     <div>
@@ -22,7 +33,6 @@
         resourceType="role"
         @edit="editInstructor"
         @delete="showDeleteAlert"
-        
       />
     </div>
 
@@ -58,7 +68,6 @@ import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
 import Modal from "@/components/global/Modal.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRoleStore } from "@/stores/roleStore";
-
 
 const rolesStore = useRoleStore();
 const authStore = useAuthStore();
@@ -108,7 +117,6 @@ const saveRole = async () => {
     saving.value = false;
   }
 };
-
 
 const showDeleteAlert = (id) => {
   showDeleteAlertDialog.value = true;

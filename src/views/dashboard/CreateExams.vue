@@ -23,7 +23,7 @@ const router = useRouter();
 onMounted(() => {
   scholarshipStore.fetchScholarships();
   emitter.on("questions", (questions) => {
-    console.log(questions);
+    (questions);
 
     exam.value.questions = questions;
   });
@@ -57,7 +57,7 @@ const errors = ref({
   crs_id: "",
 });
 
-console.log(exam.value.ins_id);
+(exam.value.ins_id);
 
 
 
@@ -71,7 +71,7 @@ const submitExam = async () => {
     
     exam.value.questions = questions;
 
-    console.log(exam.value);
+    (exam.value);
 
     await examStore.addExam(exam.value);
 

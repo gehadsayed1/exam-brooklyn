@@ -17,7 +17,7 @@ export const useCourseStore = defineStore("courseStore", () => {
     try {
       const response = await apiClient.get(ALL_COURSES);
       courses.value = response.data.data;
-      console.log(response.data.data);
+      response.data.data;
     } catch (err) {
       handleError(err);
     } finally {
@@ -26,12 +26,12 @@ export const useCourseStore = defineStore("courseStore", () => {
   };
 
   const addCourse = async (course) => {
-    console.log(course);
+    course;
 
     try {
       const response = await apiClient.post(ALL_COURSES, course);
       courses.value.push(response.data.data);
-      console.log(response.data.data);
+      response.data.data;
 
       notyf.success("Course added successfully");
     } catch (err) {

@@ -19,7 +19,7 @@ export const useExamStore = defineStore("examStore", () => {
     error.value = null;
     try {
       const response = await apiClient.get(ALL_EXAMS);
-      console.log(response.data);
+      (response.data);
       
       exams.value = response.data.data;
     } catch (err) {
@@ -52,12 +52,12 @@ export const useExamStore = defineStore("examStore", () => {
 
   // ✅ Update exam
   const updateExam = async ( id, updatedData) => {
-    console.log(updatedData);
-    console.log(id);
+    (updatedData);
+    (id);
   
     try {
       const response = await apiClient.put(`${ALL_EXAMS}/${id}`, updatedData);
-      console.log(response.data);
+      (response.data);
       examQuestions.value = response.data.data;
       notyf.success("Exam updated successfully");
       router.push({ name: "exams" });
@@ -112,7 +112,7 @@ export const useExamStore = defineStore("examStore", () => {
   
     try {
       const response = await apiClient.put(`${QUESTIONS}/${questionId}`, updatedData);
-      console.log("Response:", response.data);
+      ("Response:", response.data);
       examQuestions.value = response.data.data;
 
       if (response.status === 200) {
@@ -143,8 +143,8 @@ export const useExamStore = defineStore("examStore", () => {
 
   // ✅ Add new questions
   const addNewQuestions = async ({ exam_id, questions }) => {
-    console.log("Exam ID:", exam_id);
-    console.log("Questions:", questions);
+    ("Exam ID:", exam_id);
+    ("Questions:", questions);
     try {
       await apiClient.post(`${ALL_EXAMS}/${exam_id}/questions`, { questions });
       notyf.success("Questions added successfully");

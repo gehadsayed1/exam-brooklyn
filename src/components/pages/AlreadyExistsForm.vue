@@ -57,7 +57,7 @@ const submitForm = async () => {
   await studentStore.submitForm();
 };
 
-console.log(studentStore.studentOTP);
+
 </script>
 
 <template>

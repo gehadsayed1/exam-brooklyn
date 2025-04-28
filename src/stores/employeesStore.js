@@ -29,8 +29,8 @@ export const useEmployeeStore = defineStore("employees", () => {
     try {
       const response = await apiClient.get(USER_BY_TOKEN);
       user.value =  response.data.User
-      console.log(response.data)
-      console.log();
+      (response.data)
+      ();
       
       loading.value = false;
     } catch (error) {
@@ -70,7 +70,7 @@ export const useEmployeeStore = defineStore("employees", () => {
 
   // Delete employee via API
   const deleteEmployee = async (id) => {
-    console.log(id);
+    (id);
     
     try {
       await apiClient.delete(`${USERS}/${id}`);

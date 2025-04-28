@@ -43,11 +43,11 @@ export const useStudentStore = defineStore("studentStore", () => {
     try {
       const response = await apiClient.get(`${STUDENT_ID}/${studentId.value}`);
       courses.value = response.data;
-      console.log(courses.value);
+      (courses.value);
 
       otpSent.value = true;
       errorMessages.value = "";
-      console.log(response.data);
+      (response.data);
     } catch (error) {
       console.error(error);
       if (error.response && error.response.status === 404) {
@@ -81,7 +81,7 @@ export const useStudentStore = defineStore("studentStore", () => {
     try {
       otpMasg.value = "";
 
-      console.log("studentId", studentId);
+      ("studentId", studentId);
 
       loadingOtp.value = true;
       const response = await apiClient.post(SEND_OTP_API, {
@@ -94,9 +94,9 @@ export const useStudentStore = defineStore("studentStore", () => {
         startCountdown();
       }
 
-      console.log(response.data);
+      (response.data);
     } catch (err) {
-      console.log(err);
+      (err);
 
       if (err.response) {
         otpMasg.value =
@@ -119,7 +119,7 @@ export const useStudentStore = defineStore("studentStore", () => {
   };
 
   const fetchInstructors = async () => {
-    console.log("Selected Module:", selectedModule.value);
+    ("Selected Module:", selectedModule.value);
 
     if (!selectedModule.value) return;
     loading.value = true;
@@ -129,8 +129,8 @@ export const useStudentStore = defineStore("studentStore", () => {
       );
 
       instructors.value = response.data;
-      console.log(response.data);
-      console.log(instructors.value);
+      (response.data);
+      (instructors.value);
     } finally {
       loading.value = false;
     }
@@ -146,7 +146,7 @@ export const useStudentStore = defineStore("studentStore", () => {
         st_num: studentId.value,
         otp: studentOTP.value,
       };
-      console.log(payload);
+      (payload);
 
       const response = await apiClient.post(START_EXAM, payload);
 
@@ -192,13 +192,13 @@ export const useStudentStore = defineStore("studentStore", () => {
         answers: answers,
       };
 
-      console.log("Answers to submit:", answers);
+      ("Answers to submit:", answers);
 
       const res = await apiClient.post(
         `${SUBMIT_EXAM_ANSWERS}/${storedAttemptId.value}`,
         finalPayload
       );
-      console.log(res.data);
+     
     } catch (error) {
       handleError(error);
       console.error("Error:", error.response || error);
@@ -221,7 +221,7 @@ export const useStudentStore = defineStore("studentStore", () => {
    };
 
   const submitFinalExam = async (payload) => {
-    clearInterval(interval);
+   
     stopAutoSubmit();
     try {
       let answers = payload.answers;
@@ -236,14 +236,12 @@ export const useStudentStore = defineStore("studentStore", () => {
         return;
       }
 
-      console.log("Answers:", answers);
+     
 
       const finalPayload = {
         answers: answers,
       };
 
-      console.log("Final Payload:", finalPayload);
-      console.log("Attempt ID:", storedAttemptId.value);
       
 
       const res = await apiClient.post(
@@ -251,7 +249,7 @@ export const useStudentStore = defineStore("studentStore", () => {
         finalPayload
       );
       stopAutoSubmit();
-      console.log("Response:", res.data);
+     
 
       if (res.data && res.data.message) {
         notyf.success("Exam submitted successfully.");
@@ -299,5 +297,6 @@ export const useStudentStore = defineStore("studentStore", () => {
     startCountdown,
     timer,
     loadingOtp,
+    stopAutoSubmit,
   };
 });

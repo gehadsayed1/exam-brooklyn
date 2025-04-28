@@ -2,16 +2,29 @@
   <div class="space-y-6 p-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-800">Course List</h1>
-      <button
+      <!-- <button
         v-if="authStore.hasPermission('create-courses')"
         @click="toggleForm"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
         + Add Course
-      </button>
+      </button> -->
+      <!-- From Uiverse.io by Nawsome -->
+      <div
+        v-if="authStore.hasPermission('create-courses')"
+        @click="toggleForm"
+        class="buttons"
+      >
+        <button class="btn">
+          <span></span>
+          <p
+            data-start="good luck!"
+            data-text="ADD!"
+            data-title="new Course"
+          ></p>
+        </button>
+      </div>
     </div>
-
-   
 
     <div>
       <DataTable
@@ -19,21 +32,19 @@
           { label: 'Course Name', key: 'name' },
           { label: 'Course Code', key: 'code' },
           { label: 'Instructor', key: 'instructor' },
-       
         ]"
         :items="filteredCourses"
         resourceType="courses"
         :isCourse="true"
         @edit="editCourse"
         @delete="confirmDelete"
-        
       />
     </div>
 
     <!-- Reuse Modal Component for Add/Edit Course -->
     <Modal
       v-if="showModal"
-      :showModal="showModal" 
+      :showModal="showModal"
       :modalTitle="isEditing ? 'Edit Course' : 'Add Course'"
       :form="form"
       :saving="saving"
@@ -56,16 +67,14 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useCourseStore } from '@/stores/courseStore';
-import DataTable from '@/components/dashboard/DataTable.vue';
-import SweetAlert2Modal from '@/components/global/SweetAlert2Modal.vue';
-import Modal from '@/components/global/Modal.vue';
+import { ref, onMounted, computed } from "vue";
+import { useCourseStore } from "@/stores/courseStore";
+import DataTable from "@/components/dashboard/DataTable.vue";
+import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
+import Modal from "@/components/global/Modal.vue";
 import { useScholarshipStore } from "@/stores/scholarships";
 import { useAuthStore } from "@/stores/auth";
-
 
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
@@ -73,15 +82,14 @@ const scholarshipStore = useScholarshipStore();
 const showModal = ref(false);
 const saving = ref(false);
 const isEditing = ref(false);
-const form = ref({ code: '', name: '', scholarship: [], instructor: [] });
+const form = ref({ code: "", name: "", scholarship: [], instructor: [] });
 const showDeleteAlert = ref(false);
 const courseIdToDelete = ref(null);
 const scholarships = ref([]);
-const search = ref("");  
-
+const search = ref("");
 
 const filteredCourses = computed(() => {
-  return courseStore.courses.filter(course => {
+  return courseStore.courses.filter((course) => {
     return (
       course.name.toLowerCase().includes(search.value.toLowerCase()) ||
       course.code.toLowerCase().includes(search.value.toLowerCase())
@@ -103,7 +111,7 @@ const closeModal = () => {
 
 const editCourse = (course) => {
   isEditing.value = true;
-  
+
   form.value = { ...course };
   showModal.value = true;
 };
@@ -154,4 +162,3 @@ onMounted(() => {
   scholarships.value = scholarshipStore.scholarships;
 });
 </script>
-

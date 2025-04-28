@@ -2,57 +2,68 @@
   <div class="space-y-6 p-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-800">Instructor List</h1>
-      <button
+      <!-- <button
         @click="openAddModal"
         v-if="authStore.hasPermission('create-instructors')"
         class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600"
       >
         + Add Instructor
-      </button>
+      </button> -->
+      <!-- From Uiverse.io by Nawsome -->
+      <div
+        @click="openAddModal"
+        v-if="authStore.hasPermission('create-instructors')"
+        class="buttons"
+      >
+        <button class="btn">
+          <span></span>
+          <p
+            data-start="good luck!"
+            data-text="ADD!"
+            data-title="new Instructor"
+          ></p>
+        </button>
+      </div>
     </div>
 
-  <div>
-     
-    <div >
-      <DataTable
-        :headers="[
-          { label: 'Name', key: 'name' },
-          { label: 'courses', key: 'courses' },
-         
-        ]"
-        :items="filteredInstructors"
-        :isInstructors="true"
-        resourceType="instructors"
-        @edit="editInstructor"
-        @delete="showDeleteAlert"
-      
-        
-        :search="search"
+    <div>
+      <div>
+        <DataTable
+          :headers="[
+            { label: 'Name', key: 'name' },
+            { label: 'courses', key: 'courses' },
+          ]"
+          :items="filteredInstructors"
+          :isInstructors="true"
+          resourceType="instructors"
+          @edit="editInstructor"
+          @delete="showDeleteAlert"
+          :search="search"
+        />
+      </div>
+
+      <!-- Reuse Modal Component for Add/Edit Instructor -->
+      <Modal
+        v-if="showModal"
+        :showModal="showModal"
+        :modalTitle="isEditing ? 'Edit Instructor' : 'Add Instructor'"
+        :form="formInstructor"
+        :saving="saving"
+        :isInstructor="true"
+        @closeModal="closeModal"
+        @saveData="saveInstructor"
+      />
+
+      <!-- SweetAlert2 Modal for Confirmation -->
+      <SweetAlert2Modal
+        v-if="showDeleteAlertDialog"
+        title="Are you sure?"
+        text="This instructor will be deleted."
+        icon="warning"
+        @confirm="deleteInstructor"
+        @cancel="cancelDelete"
       />
     </div>
-
-    <!-- Reuse Modal Component for Add/Edit Instructor -->
-    <Modal
-      v-if="showModal"
-      :showModal="showModal"
-      :modalTitle="isEditing ? 'Edit Instructor' : 'Add Instructor'"
-      :form="formInstructor"
-      :saving="saving"
-      :isInstructor="true"
-      @closeModal="closeModal"
-      @saveData="saveInstructor"
-    />
-
-    <!-- SweetAlert2 Modal for Confirmation -->
-    <SweetAlert2Modal
-      v-if="showDeleteAlertDialog"
-      title="Are you sure?"
-      text="This instructor will be deleted."
-      icon="warning"
-      @confirm="deleteInstructor"
-      @cancel="cancelDelete"
-    />
-  </div>
   </div>
 </template>
 
@@ -64,14 +75,13 @@ import SweetAlert2Modal from "@/components/global/SweetAlert2Modal.vue";
 import Modal from "@/components/global/Modal.vue";
 import { useAuthStore } from "@/stores/auth";
 
-
 const authStore = useAuthStore();
 const instructorStore = useInstructorStore();
 const search = ref("");
 const showModal = ref(false);
 const saving = ref(false);
 const isEditing = ref(false);
-const formInstructor = ref({  name: "", phone: "" , courses: [] });
+const formInstructor = ref({ name: "", phone: "", courses: [] });
 const showDeleteAlertDialog = ref(false);
 const itemToDelete = ref(null);
 
@@ -85,15 +95,13 @@ const filteredInstructors = computed(() => {
 
 const openAddModal = () => {
   isEditing.value = false;
-  formInstructor.value = { name: "", phone: "" , courses: [] };
+  formInstructor.value = { name: "", phone: "", courses: [] };
   showModal.value = true;
 };
 
-
-
 const editInstructor = (instructor) => {
   isEditing.value = true;
-  
+
   formInstructor.value = { ...instructor };
   showModal.value = true;
 };
@@ -114,10 +122,10 @@ const saveInstructor = async () => {
 
   try {
     if (isEditing.value) {
-      console.log(payload);
+      (payload);
       await instructorStore.updateInstructor(formInstructor.value.id, payload);
     } else {
-      console.log(payload);
+      (payload);
       await instructorStore.addInstructor(payload);
     }
     closeModal();
@@ -127,7 +135,6 @@ const saveInstructor = async () => {
     saving.value = false;
   }
 };
-
 
 const showDeleteAlert = (id) => {
   showDeleteAlertDialog.value = true;

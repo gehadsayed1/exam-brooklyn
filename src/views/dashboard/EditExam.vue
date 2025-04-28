@@ -149,7 +149,7 @@ watch(
 onMounted(async () => {
   const examId = route.params.id;
   await examStore.fetchExamById(examId);
-  console.log(examStore.singleExam);
+  (examStore.singleExam);
   
 
   if (examStore.singleExam) {
@@ -166,7 +166,7 @@ onMounted(async () => {
   }
   hasChanges.value = false; 
   emitter.on('questions', (questions) => {
-    console.log(questions);
+    (questions);
     addQuestions.value = questions
   })
 
@@ -205,7 +205,7 @@ const updateExam = async () => {
       }
     }
 
-    console.log("Submitting exam data:", exam.value);
+    ("Submitting exam data:", exam.value);
 
     await examStore.updateExam(route.params.id, exam.value);
 
@@ -240,8 +240,8 @@ const submitNewQuestions = async () => {
   
 
   try {
-    console.log("Submitting new questions:", addQuestions.value);
-    console.log("Exam ID:", route.params.id);
+    ("Submitting new questions:", addQuestions.value);
+    ("Exam ID:", route.params.id);
     
     await examStore.addNewQuestions({
       exam_id: route.params.id,

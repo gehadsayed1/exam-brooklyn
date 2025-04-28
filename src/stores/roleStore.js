@@ -18,7 +18,7 @@ export const useRoleStore = defineStore("roleStore", () => {
     try {
       const response = await apiClient.get(ROLES);
       roles.value = response.data.data;
-      console.log("Roles fetched successfully:", roles.value);
+      ("Roles fetched successfully:", roles.value);
     } catch (err) {
       error.value = "Failed to fetch roles";
       console.error("Fetch Error:", err.response?.data?.message || err.message);
@@ -33,11 +33,11 @@ export const useRoleStore = defineStore("roleStore", () => {
     try {
       const response = await apiClient.get(PERMISSIONS);
       permissions.value = response.data.data;
-      console.log(response.data.data);
+      (response.data.data);
       
-      console.log("Permissions fetched successfully:", permissions.value);
+      ("Permissions fetched successfully:", permissions.value);
       
-      console.log("Roles fetched successfully:", roles.value);
+      ("Roles fetched successfully:", roles.value);
     } catch (err) {
       error.value = "Failed to fetch roles";
       console.error("Fetch Error:", err.response?.data?.message || err.message);
@@ -48,7 +48,7 @@ export const useRoleStore = defineStore("roleStore", () => {
   }
 
   const addRole = async (roleData) => {
-    console.log("Adding role:", roleData);
+    ("Adding role:", roleData);
     
  
     error.value = null;
@@ -56,7 +56,7 @@ export const useRoleStore = defineStore("roleStore", () => {
       const response = await apiClient.post(ROLES, roleData);
       roles.value.push(response.data.data); 
         notyf.success("Role added successfully");
-      console.log("Role added successfully:", response.data.data);
+      ("Role added successfully:", response.data.data);
       return response.data.data; 
     } catch (err) {
       handleError(err);
@@ -77,7 +77,7 @@ export const useRoleStore = defineStore("roleStore", () => {
         roles.value[index] = response.data.data; 
       }
         notyf.success("Role updated successfully");
-      console.log("Role updated successfully:", response.data.data);
+      ("Role updated successfully:", response.data.data);
       return response.data.data;
     } catch (err) {
       handleError(err);
@@ -92,7 +92,7 @@ export const useRoleStore = defineStore("roleStore", () => {
      
       roles.value = roles.value.filter(role => role.id !== roleId);
       notyf.success("Role deleted successfully");
-      console.log("Role deleted successfully:", roleId);
+      ("Role deleted successfully:", roleId);
     } catch (err) {
       handleError(err);
     } 
